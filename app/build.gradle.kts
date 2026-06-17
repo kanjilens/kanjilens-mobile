@@ -1,8 +1,8 @@
+val hasGoogleServices = file("google-services.json").exists()
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    // Add the Google services Gradle plugin
-    id("com.google.gms.google-services")
 }
 
 android {
@@ -19,6 +19,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("boolean", "FIREBASE_ENABLED", hasGoogleServices.toString())
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,7 +39,12 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+}
+
+if (hasGoogleServices) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 dependencies {
@@ -46,7 +52,9 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.compose.ui)
+    implementation("androidx.compose.ui:ui-text-google-fonts")
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)

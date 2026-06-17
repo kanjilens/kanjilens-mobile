@@ -1,6 +1,5 @@
 package com.example.kanjilens.auth.presentation.ui
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +17,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kanjilens.BuildConfig
+import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(viewModel: AuthViewModel = viewModel(), modifier : Modifier = Modifier,  onLoginSuccess: () -> Unit) {
@@ -45,6 +45,18 @@ fun LoginScreen(viewModel: AuthViewModel = viewModel(), modifier : Modifier = Mo
         fontWeight = FontWeight.Bold,
 
     )
+
+        if (!BuildConfig.FIREBASE_ENABLED) {
+            Text(
+                text = "Modo local ativo: Firebase desabilitado para teste do OCR.",
+                modifier = Modifier.padding(vertical = 12.dp)
+            )
+            Button(onClick = onLoginSuccess) {
+                Text("Entrar no teste OCR")
+            }
+            return@Column
+        }
+
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
