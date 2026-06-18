@@ -38,14 +38,16 @@ class AuthViewModel : ViewModel() {
         isLoggedIn=false
     }
 
-    fun createAccount(email: String, password: String) {
+    fun createAccount(name: String, email: String, password: String) {
         isLoading = true
         repository.createAccount(
+            name = name,
             email = email,
             password = password,
             onSuccess = {
                 isLoggedIn = true
                 isLoading = false
+                Log.d("AuthViewModel", "Conta criada")
             },
             onError = { erro ->
                 errorMessage = erro
