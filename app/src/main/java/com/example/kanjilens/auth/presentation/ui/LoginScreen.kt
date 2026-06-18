@@ -2,6 +2,7 @@ package com.example.kanjilens.auth.presentation.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -22,22 +23,23 @@ import com.example.kanjilens.BuildConfig
 import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(viewModel: AuthViewModel = viewModel(), modifier : Modifier = Modifier,  onLoginSuccess: () -> Unit) {
+fun LoginScreen(viewModel: AuthViewModel = viewModel(), modifier : Modifier = Modifier,  onLoginSuccess: () -> Unit, onGoToRegister: () -> Unit) {
 
     var email by remember {mutableStateOf("")}
     var password by remember {mutableStateOf("")}
 
+    LaunchedEffect(viewModel.isLoggedIn) {
+        if (viewModel.isLoggedIn) {
+            onLoginSuccess()
+        }
+    }
     Column(
         modifier = Modifier
                  .fillMaxSize()
                  .padding(16.dp),
             verticalArrangement = Arrangement.Center
     ){
-        LaunchedEffect(viewModel.isLoggedIn) {
-            if (viewModel.isLoggedIn) {
-                onLoginSuccess()
-            }
-        }
+
 
         Text(
         text = "KanjiLens",
@@ -68,11 +70,17 @@ fun LoginScreen(viewModel: AuthViewModel = viewModel(), modifier : Modifier = Mo
             onValueChange = { password = it },
             label = { Text("Digite sua senha") }
         )
-
-        Button(onClick = {
-            viewModel.signIn(email,password)
-        }) {
-            Text("Entrar")
+        Row() {
+            Button(onClick = {
+                viewModel.signIn(email, password)
+            }) {
+                Text("Entrar")
+            }
+            Button(onClick = {
+                onGoToRegister()
+            }) {
+                Text("Registrar")
+            }
         }
         viewModel.errorMessage?.let {
             Text(
