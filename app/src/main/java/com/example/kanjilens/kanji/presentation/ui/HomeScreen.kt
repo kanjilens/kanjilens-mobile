@@ -53,6 +53,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +67,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
 import com.example.kanjilens.ui.theme.AppBackground
 import com.example.kanjilens.ui.theme.AppPrimary
 import com.example.kanjilens.ui.theme.AppPrimaryLight
@@ -101,7 +104,10 @@ private data class KanjiComment(
 )
 
 @Composable
-fun HomeScreen(onOpenCamera: () -> Unit) {
+fun HomeScreen(viewModel: AuthViewModel = viewModel(), onLogout: () -> Unit, onOpenCamera: () -> Unit) {
+    LaunchedEffect(viewModel.isLoggedIn) {
+        if (!viewModel.isLoggedIn) onLogout()
+    }
     val stats = listOf(
         DashboardStat(
             title = "Total de Kanjis",
@@ -186,7 +192,7 @@ fun HomeScreen(onOpenCamera: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                HeaderCard()
+                HeaderCard(onLogout = { viewModel.signOut() })
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -244,7 +250,7 @@ fun HomeScreen(onOpenCamera: () -> Unit) {
 }
 
 @Composable
-private fun HeaderCard() {
+private fun HeaderCard(onLogout: () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface),
@@ -283,7 +289,7 @@ private fun HeaderCard() {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .clickable(onClick = {})
+                    .clickable(onClick = onLogout)
                     .background(Color(0xFFF5FAF9)),
                 contentAlignment = Alignment.Center
             ) {

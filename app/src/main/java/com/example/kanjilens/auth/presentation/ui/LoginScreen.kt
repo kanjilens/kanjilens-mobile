@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -25,8 +26,8 @@ import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(viewModel: AuthViewModel = viewModel(), modifier : Modifier = Modifier,  onLoginSuccess: () -> Unit, onGoToRegister: () -> Unit) {
 
-    var email by remember {mutableStateOf("")}
-    var password by remember {mutableStateOf("")}
+    var email by rememberSaveable {mutableStateOf("")}
+    var password by rememberSaveable {mutableStateOf("")}
 
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) {

@@ -54,7 +54,7 @@ class AuthRepository {
             ?: onDone()
     }
 
-    fun signout() {
+    fun signOut() {
         try {
             auth?.signOut()
             Log.d("AuthRepository", "Logout ok")
