@@ -35,8 +35,8 @@ class AuthViewModel : ViewModel() {
         )
     }
 
-    fun signout(){
-        repository.signout()
+    fun signOut(){
+        repository.signOut()
         isLoggedIn=false
     }
 
