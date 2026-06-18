@@ -5,6 +5,7 @@ import com.example.kanjilens.BuildConfig
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
+import com.google.firebase.auth.userProfileChangeRequest
 
 class AuthRepository {
     private val auth by lazy {
@@ -26,7 +27,7 @@ class AuthRepository {
             .addOnFailureListener { onError(it.message ?: "Erro ao entrar") }
     }
 
-    fun createAccount(email: String, password: String,
+    fun createAccount(  name: String,email: String, password: String,
                       onSuccess: () -> Unit,
                       onError: (String) -> Unit) {
         val currentAuth = auth ?: run {
@@ -35,7 +36,15 @@ class AuthRepository {
         }
 
         currentAuth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { onSuccess() }
+            .addOnSuccessListener {
+
+                val profileUpdates = userProfileChangeRequest {
+                    displayName = name
+                }
+                currentAuth.currentUser?.updateProfile(profileUpdates)
+                    ?.addOnSuccessListener { onSuccess() }
+                    ?.addOnFailureListener { onError(it.message ?: "Erro ao salvar nome") }
+            }
             .addOnFailureListener { onError(it.message ?: "Erro ao criar conta") }
     }
 
