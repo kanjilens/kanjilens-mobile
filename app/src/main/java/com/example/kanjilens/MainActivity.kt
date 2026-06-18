@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                         RegisterScreen(
                             onRegisterSuccess = {
                                 navController.navigate("Home"){
-                                    popUpTo("Register") { inclusive = true }
+                                    popUpTo("Login") { inclusive = true }
                                 }
                             }
                         )
@@ -53,6 +53,9 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(
                             onOpenCamera = {
                                 navController.navigate("Camera")
+                            },
+                            onLogout ={
+                                navController.navigate(route="Login")
                             }
                         )
                     }
