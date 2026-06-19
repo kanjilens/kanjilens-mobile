@@ -31,9 +31,12 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
-fun KanjiLensTheme(content: @Composable () -> Unit) {
+fun KanjiLensTheme(
+    darkTheme: Boolean = false,
+    content: @Composable () -> Unit
+) {
     MaterialTheme(
-        colorScheme = LightColorScheme,
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
         typography = Typography,
         content = content
     )
