@@ -5,7 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -13,16 +16,23 @@ import com.example.kanjilens.auth.presentation.ui.LoginScreen
 import com.example.kanjilens.auth.presentation.ui.RegisterScreen
 import com.example.kanjilens.kanji.presentation.ui.CameraScreen
 import com.example.kanjilens.kanji.presentation.ui.HomeScreen
+import com.example.kanjilens.settings.data.local.AppSettings
+import com.example.kanjilens.settings.data.local.AppSettingsStore
+import com.example.kanjilens.settings.presentation.ui.SettingsScreen
 import com.example.kanjilens.ui.theme.KanjiLensTheme
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            KanjiLensTheme {
+            val context = LocalContext.current.applicationContext
+            val settings by AppSettingsStore.settingsFlow(context).collectAsState(initial = AppSettings())
+
+            KanjiLensTheme(darkTheme = settings.darkMode) {
                 val navController = rememberNavController()
-                val startDestination = if (BuildConfig.FIREBASE_ENABLED) "Login" else "Home"
+                val startDestination = if (FirebaseAuth.getInstance().currentUser != null) "Home" else "Login"
                 NavHost(
                     navController = navController,
                     startDestination = startDestination,
@@ -31,20 +41,19 @@ class MainActivity : ComponentActivity() {
                     composable("Login") {
                         LoginScreen(
                             onLoginSuccess = {
-                                navController.navigate("Home"){
+                                navController.navigate("Home") {
                                     popUpTo("Login") { inclusive = true }
+                                    launchSingleTop = true
                                 }
-                            },
-                            onGoToRegister = {
-                                navController.navigate("Register")
                             }
                         )
                     }
-                    composable("Register"){
+                    composable("Register") {
                         RegisterScreen(
                             onRegisterSuccess = {
-                                navController.navigate("Home"){
+                                navController.navigate("Home") {
                                     popUpTo("Login") { inclusive = true }
+                                    launchSingleTop = true
                                 }
                             }
                         )
@@ -52,10 +61,20 @@ class MainActivity : ComponentActivity() {
                     composable(route = "Home") {
                         HomeScreen(
                             onOpenCamera = {
-                                navController.navigate("Camera")
+                                navController.navigate("Camera") { launchSingleTop = true }
                             },
-                            onLogout ={
-                                navController.navigate(route="Login")
+                            onOpenSettings = {
+                                navController.navigate("Settings") {
+                                    popUpTo("Home") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onLogout = {
+                                navController.navigate("Login") {
+                                    popUpTo("Home") { inclusive = true }
+                                    launchSingleTop = true
+                                }
                             }
                         )
                     }
@@ -63,6 +82,26 @@ class MainActivity : ComponentActivity() {
                         CameraScreen(
                             onClose = {
                                 navController.popBackStack()
+                            }
+                        )
+                    }
+                    composable(route = "Settings") {
+                        SettingsScreen(
+                            onOpenHome = {
+                                navController.navigate("Home") {
+                                    popUpTo("Home") { inclusive = false }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onOpenCamera = {
+                                navController.navigate("Camera") { launchSingleTop = true }
+                            },
+                            onLogout = {
+                                navController.navigate("Login") {
+                                    popUpTo("Home") { inclusive = true }
+                                    launchSingleTop = true
+                                }
                             }
                         )
                     }

@@ -11,7 +11,11 @@ data class KanjiResponse(
     val meanings: List<String> = emptyList(),
     val kun_readings: List<String> = emptyList(),
     val on_readings: List<String> = emptyList(),
+    val name_readings: List<String> = emptyList(),
     val stroke_count: Int? = null,
+    val grade: Int? = null,
+    val jlpt: Int? = null,
+    val heisig_en: String? = null,
 )
 
 interface KanjiApiService {

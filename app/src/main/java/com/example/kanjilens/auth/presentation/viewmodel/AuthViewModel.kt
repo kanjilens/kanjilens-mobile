@@ -19,6 +19,7 @@ class AuthViewModel : ViewModel() {
 
     fun signIn(email: String, password: String) {
         isLoading = true
+        errorMessage = null
         repository.signIn(
             email = email,
             password = password,
@@ -38,10 +39,13 @@ class AuthViewModel : ViewModel() {
     fun signOut(){
         repository.signOut()
         isLoggedIn=false
+        isLoading = false
+        errorMessage = null
     }
 
     fun createAccount(name: String, email: String, password: String) {
         isLoading = true
+        errorMessage = null
         repository.createAccount(
             name = name,
             email = email,
@@ -65,5 +69,9 @@ class AuthViewModel : ViewModel() {
                 isLoading = false
             }
         )
+    }
+
+    fun clearError() {
+        errorMessage = null
     }
 }

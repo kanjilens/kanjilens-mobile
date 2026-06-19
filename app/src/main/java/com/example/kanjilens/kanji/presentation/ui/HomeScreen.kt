@@ -1,7 +1,7 @@
 package com.example.kanjilens.kanji.presentation.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,17 +29,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.CenterFocusStrong
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.RemoveRedEye
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Send
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.outlined.Logout
+import androidx.compose.material.icons.outlined.RemoveRedEye
+import androidx.compose.material.icons.outlined.Send
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -50,10 +45,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,8 +63,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
+import com.example.kanjilens.kanji.data.remote.KanjiFirestoreRepository
+import com.example.kanjilens.kanji.model.KanjiComment
+import com.example.kanjilens.kanji.model.KanjiEntry
+import com.example.kanjilens.ui.navigation.AppBottomBar
+import com.example.kanjilens.ui.navigation.AppTab
 import com.example.kanjilens.ui.theme.AppBackground
 import com.example.kanjilens.ui.theme.AppPrimary
 import com.example.kanjilens.ui.theme.AppPrimaryLight
@@ -83,105 +82,58 @@ private data class DashboardStat(
     val icon: @Composable () -> Unit,
 )
 
-private data class DailyKanji(
-    val id: String,
-    val kanji: String,
-    val meaning: String,
-    val reading: String,
-    val viewed: Boolean = false,
-    val strokeCount: Int = 0,
-    val addedDate: String = "15/06/2026",
-    val jlpt: String = "JLPT N4",
-    val grade: String = "Grade 1",
-    val onReadings: List<String> = emptyList(),
-    val kunReadings: List<String> = emptyList(),
-    val comments: List<KanjiComment> = emptyList(),
-)
-
-private data class KanjiComment(
-    val text: String,
-    val date: String,
-)
-
 @Composable
-fun HomeScreen(viewModel: AuthViewModel = viewModel(), onLogout: () -> Unit, onOpenCamera: () -> Unit) {
-    LaunchedEffect(viewModel.isLoggedIn) {
-        if (!viewModel.isLoggedIn) onLogout()
+fun HomeScreen(
+    onOpenCamera: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onLogout: () -> Unit,
+) {
+    val repository = remember { KanjiFirestoreRepository() }
+    var dailyKanjis by remember { mutableStateOf<List<KanjiEntry>>(emptyList()) }
+    var totalCatalogKanjis by remember { mutableStateOf(0) }
+    var selectedKanjiId by remember { mutableStateOf<String?>(null) }
+    val selectedKanji = dailyKanjis.firstOrNull { it.id == selectedKanjiId }
+
+    DisposableEffect(repository) {
+        val catalogListener = repository.observeCatalogCount(
+            onUpdate = { totalCatalogKanjis = it },
+            onError = {}
+        )
+        val collectionListener = repository.observeUserCollection(
+            onUpdate = { dailyKanjis = it },
+            onError = {}
+        )
+
+        onDispose {
+            catalogListener.remove()
+            collectionListener?.remove()
+        }
     }
+
     val stats = listOf(
         DashboardStat(
             title = "Total de Kanjis",
-            value = "12",
+            value = totalCatalogKanjis.toString(),
             subtitle = "kanjis cadastrados",
-            icon = {
-                Icon(Icons.Outlined.AutoStories, contentDescription = null, tint = AppSecondary)
-            }
+            icon = { Icon(Icons.Outlined.AutoStories, contentDescription = null, tint = AppSecondary) }
         ),
         DashboardStat(
             title = "Kanjis Vistos",
-            value = "7",
+            value = dailyKanjis.count { it.viewed }.toString(),
             subtitle = "marcados como vistos",
-            icon = {
-                Icon(Icons.Outlined.RemoveRedEye, contentDescription = null, tint = AppSecondary)
-            }
-        ),
-    )
-    var dailyKanjis by remember {
-        mutableStateOf(
-            listOf(
-                DailyKanji(
-                    id = "midori",
-                    kanji = "緑",
-                    meaning = "affinity, border, brink, connection, edge, relation, verge",
-                    reading = "えにし, ふち, ふちどる, へり, ゆかり, よすが, -ネン, エン",
-                    viewed = true,
-                    strokeCount = 15,
-                    jlpt = "JLPT N1",
-                    grade = "Grade 8",
-                    onReadings = listOf("-ネン", "エン"),
-                    kunReadings = listOf("えにし", "ふち", "ふちどる", "へり", "ゆかり", "よすが"),
-                    comments = listOf(
-                        KanjiComment("Apareceu no contexto de 緑起 (engi) falando sobre superstições e sorte.", "12/06/2026"),
-                        KanjiComment("Lembrar: ligado à ideia de 'conexão entre pessoas'. Muito usado em 緑結び.", "12/06/2026"),
-                    )
-                ),
-                DailyKanji(
-                    id = "yuki",
-                    kanji = "雪",
-                    meaning = "snow",
-                    reading = "ゆき, セツ",
-                    strokeCount = 11,
-                    onReadings = listOf("セツ"),
-                    kunReadings = listOf("ゆき")
-                ),
-                DailyKanji(
-                    id = "hoshi",
-                    kanji = "星",
-                    meaning = "star, spot",
-                    reading = "ほし, -ぼし, セイ",
-                    viewed = true,
-                    strokeCount = 9,
-                    onReadings = listOf("セイ"),
-                    kunReadings = listOf("ほし", "-ぼし")
-                ),
-                DailyKanji(
-                    id = "kaze",
-                    kanji = "風",
-                    meaning = "wind, air",
-                    reading = "かぜ, かざ-, フウ",
-                    strokeCount = 9,
-                    onReadings = listOf("フウ"),
-                    kunReadings = listOf("かぜ", "かざ-")
-                ),
-            )
+            icon = { Icon(Icons.Outlined.RemoveRedEye, contentDescription = null, tint = AppSecondary) }
         )
-    }
-    var selectedKanji by remember { mutableStateOf<DailyKanji?>(null) }
+    )
 
     Scaffold(
         containerColor = AppBackground,
         bottomBar = {
-            HomeBottomBar(onOpenCamera = onOpenCamera)
+            AppBottomBar(
+                selectedTab = AppTab.HOME,
+                onHome = {},
+                onCamera = onOpenCamera,
+                onSettings = onOpenSettings
+            )
         }
     ) { innerPadding ->
         LazyColumn(
@@ -191,9 +143,7 @@ fun HomeScreen(viewModel: AuthViewModel = viewModel(), onLogout: () -> Unit, onO
             contentPadding = PaddingValues(start = 20.dp, top = 18.dp, end = 20.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                HeaderCard(onLogout = { viewModel.signOut() })
-            }
+            item { HeaderCard(onLogout = onLogout) }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
@@ -218,13 +168,11 @@ fun HomeScreen(viewModel: AuthViewModel = viewModel(), onLogout: () -> Unit, onO
                     }
                 }
             }
-            item {
-                WeeklyCard()
-            }
+            item { WeeklyCard(kanjiCount = dailyKanjis.size) }
             item {
                 TodaySection(
                     dailyKanjis = dailyKanjis,
-                    onKanjiClick = { selectedKanji = it }
+                    onKanjiClick = { selectedKanjiId = it.id }
                 )
             }
         }
@@ -233,17 +181,16 @@ fun HomeScreen(viewModel: AuthViewModel = viewModel(), onLogout: () -> Unit, onO
     selectedKanji?.let { item ->
         KanjiDetailsDialog(
             item = item,
-            onDismiss = { selectedKanji = null },
+            onDismiss = { selectedKanjiId = null },
             onToggleViewed = {
-                val updatedItem = item.copy(viewed = !item.viewed)
-                dailyKanjis = dailyKanjis.map { kanji ->
-                    if (kanji.id == item.id) updatedItem else kanji
-                }
-                selectedKanji = updatedItem
+                repository.toggleViewed(item, onSuccess = {}, onError = {})
             },
             onDelete = {
-                dailyKanjis = dailyKanjis.filterNot { kanji -> kanji.id == item.id }
-                selectedKanji = null
+                repository.deleteKanji(item.id, onSuccess = {}, onError = {})
+                selectedKanjiId = null
+            },
+            onAddComment = { comment ->
+                repository.addComment(item.id, comment, onSuccess = {}, onError = {})
             }
         )
     }
@@ -338,7 +285,7 @@ private fun StatCard(stat: DashboardStat, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun WeeklyCard() {
+private fun WeeklyCard(kanjiCount: Int) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface),
@@ -363,12 +310,12 @@ private fun WeeklyCard() {
                 Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = AppSecondary)
             }
             Text(
-                text = "1",
+                text = kanjiCount.toString(),
                 style = MaterialTheme.typography.displaySmall,
                 color = AppPrimary
             )
             Text(
-                text = "kanjis adicionados",
+                text = "kanjis na colecao",
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTextMuted
             )
@@ -378,8 +325,8 @@ private fun WeeklyCard() {
 
 @Composable
 private fun TodaySection(
-    dailyKanjis: List<DailyKanji>,
-    onKanjiClick: (DailyKanji) -> Unit,
+    dailyKanjis: List<KanjiEntry>,
+    onKanjiClick: (KanjiEntry) -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -396,30 +343,35 @@ private fun TodaySection(
                 Icon(Icons.Outlined.Today, contentDescription = null, tint = AppSecondary)
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Kanjis de Hoje",
+                    text = "Kanjis Descobertos",
                     style = MaterialTheme.typography.titleLarge,
                     color = AppPrimary
                 )
             }
             Text(
-                text = "segunda-feira, 15 de junho",
+                text = "Toque em um card para ver detalhes ou editar o estado",
                 style = MaterialTheme.typography.bodyLarge,
                 color = AppTextMuted
             )
-            BoxWithConstraints {
-                val cardWidth = (maxWidth - 14.dp) / 2
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    dailyKanjis.chunked(2).forEach { rowItems ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                            rowItems.forEach { item ->
-                                DailyKanjiCard(
-                                    item = item,
-                                    modifier = Modifier.width(cardWidth),
-                                    onClick = { onKanjiClick(item) }
-                                )
-                            }
-                            if (rowItems.size == 1) {
-                                Spacer(modifier = Modifier.width(cardWidth))
+
+            if (dailyKanjis.isEmpty()) {
+                EmptyCollectionCard()
+            } else {
+                BoxWithConstraints {
+                    val cardWidth = (maxWidth - 14.dp) / 2
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        dailyKanjis.chunked(2).forEach { rowItems ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                rowItems.forEach { item ->
+                                    DailyKanjiCard(
+                                        item = item,
+                                        modifier = Modifier.width(cardWidth),
+                                        onClick = { onKanjiClick(item) }
+                                    )
+                                }
+                                if (rowItems.size == 1) {
+                                    Spacer(modifier = Modifier.width(cardWidth))
+                                }
                             }
                         }
                     }
@@ -430,8 +382,36 @@ private fun TodaySection(
 }
 
 @Composable
+private fun EmptyCollectionCard() {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE0E6ED))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Nenhum kanji salvo ainda.",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFF24324A)
+            )
+            Text(
+                text = "Use o botao central da camera para fotografar e adicionar um novo kanji a sua colecao.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppTextMuted
+            )
+        }
+    }
+}
+
+@Composable
 private fun DailyKanjiCard(
-    item: DailyKanji,
+    item: KanjiEntry,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -514,142 +494,105 @@ private fun DailyKanjiCard(
 }
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 private fun KanjiDetailsDialog(
-    item: DailyKanji,
+    item: KanjiEntry,
     onDismiss: () -> Unit,
     onToggleViewed: () -> Unit,
     onDelete: () -> Unit,
+    onAddComment: (String) -> Unit,
 ) {
-    val modalShape = RoundedCornerShape(10.dp)
+    var commentText by remember { mutableStateOf("") }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xCC08101F))
+                .padding(16.dp)
         ) {
             Card(
                 modifier = Modifier
-                    .fillMaxWidth(0.94f)
-                    .fillMaxHeight(0.91f)
-                    .border(2.dp, Color(0xFFE5E7EB), modalShape),
-                shape = modalShape,
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.92f)
+                    .align(Alignment.Center),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(AppSecondary)
-                            .padding(16.dp)
+                            .background(AppPrimary)
+                            .padding(horizontal = 20.dp, vertical = 18.dp)
                     ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(text = item.kanji, style = MaterialTheme.typography.displayLarge, color = Color.White)
+                            Text(text = item.meaning, style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.9f))
+                        }
                         IconButton(
                             onClick = onDismiss,
                             modifier = Modifier.align(Alignment.TopEnd)
                         ) {
-                            Icon(Icons.Outlined.Close, contentDescription = "Fechar", tint = Color(0xFF143135))
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 12.dp, end = 44.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = item.kanji,
-                                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 52.sp),
-                                    color = Color(0xFF24324A)
-                                )
-                            }
-
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    DetailChip(text = item.jlpt, background = Color.White, textColor = AppPrimary)
-                                    DetailChip(text = item.grade, background = AppPrimaryLight.copy(alpha = 0.55f), textColor = Color.White)
-                                    if (item.viewed) {
-                                        DetailChip(text = "Visto", background = Color.White.copy(alpha = 0.22f), textColor = Color.White)
-                                    }
-                                }
-                                Text(
-                                    text = item.meaning,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "Heisig: ${item.meaning.substringBefore(',')}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.White.copy(alpha = 0.82f)
-                                )
-                            }
+                            Icon(Icons.Outlined.Close, contentDescription = null, tint = Color.White)
                         }
                     }
 
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            DetailMetric(label = "TRAÇOS", value = item.strokeCount.toString())
-                            DetailMetric(label = "DATA ADICIONADO", value = item.addedDate, showCalendar = true)
+                        DetailChipRow(item = item)
+
+                        InfoBlock(title = "Leitura", value = item.reading)
+                        InfoBlock(title = "Heisig", value = item.heisig.ifBlank { "Sem referencia" })
+
+                        if (item.comments.isNotEmpty()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = null, tint = AppSecondary)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Comentarios", style = MaterialTheme.typography.titleLarge, color = AppPrimary)
+                                }
+                                item.comments.forEach { comment ->
+                                    CommentCard(comment)
+                                }
+                            }
                         }
 
-                        HorizontalDivider(color = Color(0xFFE5E9EF))
-
-                        ReadingChipsSection(label = "LEITURAS ON (音読み)", readings = item.onReadings)
-                        ReadingChipsSection(label = "LEITURAS KUN (訓読み)", readings = item.kunReadings)
-
-                        HorizontalDivider(color = Color(0xFFE5E9EF))
-
-                        DetailSection(label = "SIGNIFICADOS", value = item.meaning)
-
-                        HorizontalDivider(color = Color(0xFFE5E9EF))
-                        CommentsSection(comments = item.comments)
-
-                        HorizontalDivider(color = Color(0xFFE5E9EF))
-
-                        OutlinedButton(
-                            onClick = onToggleViewed,
-                            modifier = Modifier.fillMaxWidth(),
-                            border = BorderStroke(1.dp, AppPrimaryLight),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AppPrimary)
-                        ) {
-                            Icon(Icons.Outlined.RemoveRedEye, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (item.viewed) "Marcar como não visto" else "Marcar como visto")
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text("Adicionar comentario", style = MaterialTheme.typography.titleLarge, color = AppPrimary)
+                            OutlinedTextField(
+                                value = commentText,
+                                onValueChange = { commentText = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Escreva uma anotacao...") }
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Button(onClick = {
+                                    onAddComment(commentText)
+                                    commentText = ""
+                                }) {
+                                    Icon(Icons.Outlined.Send, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Salvar")
+                                }
+                                OutlinedButton(onClick = onToggleViewed) {
+                                    Text(if (item.viewed) "Marcar como nao visto" else "Marcar como visto")
+                                }
+                            }
                         }
 
                         Button(
                             onClick = onDelete,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD95C5C))
                         ) {
-                            Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Outlined.Delete, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Excluir")
+                            Text("Excluir kanji")
                         }
                     }
                 }
@@ -659,222 +602,38 @@ private fun KanjiDetailsDialog(
 }
 
 @Composable
-private fun DetailChip(text: String, background: Color, textColor: Color) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(background)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Text(text = text, style = MaterialTheme.typography.labelMedium, color = textColor)
-    }
-}
-
-@Composable
-private fun ReadingChipsSection(label: String, readings: List<String>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
-        if (readings.isEmpty()) {
-            Text(text = "Nenhuma leitura cadastrada.", style = MaterialTheme.typography.bodyMedium, color = AppTextMuted)
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                readings.chunked(4).forEach { rowItems ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        rowItems.forEach { reading ->
-                            DetailChip(
-                                text = reading,
-                                background = AppPrimaryLight.copy(alpha = 0.85f),
-                                textColor = AppPrimary
-                            )
-                        }
-                    }
-                }
+private fun DetailChipRow(item: KanjiEntry) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(item.jlpt, item.grade, "${item.strokeCount} traços").forEach { label ->
+            Box(
+                modifier = Modifier
+                    .border(1.dp, Color(0xFFE0E6ED), RoundedCornerShape(999.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(text = label, style = MaterialTheme.typography.labelMedium, color = AppTextMuted)
             }
         }
     }
 }
 
 @Composable
-private fun CommentsSection(comments: List<KanjiComment>) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(text = "COMENTÁRIOS", style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
-        if (comments.isEmpty()) {
-            Text(text = "Nenhum comentário ainda.", style = MaterialTheme.typography.bodyMedium, color = AppTextMuted)
-        } else {
-            comments.forEach { comment ->
-                CommentCard(comment = comment)
-            }
-        }
-        CommentInputPreview()
+private fun InfoBlock(title: String, value: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium, color = AppPrimary)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF24324A))
+        HorizontalDivider(color = Color(0xFFE6ECF1))
     }
 }
 
 @Composable
 private fun CommentCard(comment: KanjiComment) {
     Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE0E5EC)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC))
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Icon(
-                Icons.Outlined.ChatBubbleOutline,
-                contentDescription = null,
-                tint = AppTextMuted,
-                modifier = Modifier.size(18.dp)
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(text = comment.text, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF24324A))
-                Text(text = comment.date, style = MaterialTheme.typography.bodySmall, color = AppTextMuted)
-            }
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(text = comment.text, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF24324A))
+            Text(text = comment.date, style = MaterialTheme.typography.bodySmall, color = AppTextMuted)
         }
-    }
-}
-
-@Composable
-private fun CommentInputPreview() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(72.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.White)
-                .border(1.dp, Color(0xFFE0E5EC), RoundedCornerShape(12.dp))
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Text(
-                text = "Escreva um comentário sobre este kanji...",
-                style = MaterialTheme.typography.bodyLarge,
-                color = AppTextMuted.copy(alpha = 0.75f)
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF7CCBC5)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Outlined.Send, contentDescription = "Enviar comentário", tint = Color.White)
-        }
-    }
-}
-
-@Composable
-private fun DetailMetric(label: String, value: String, showCalendar: Boolean = false) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (showCalendar) {
-                Icon(
-                    Icons.Outlined.CalendarMonth,
-                    contentDescription = null,
-                    tint = AppTextMuted,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-            }
-            Text(text = value, style = MaterialTheme.typography.titleMedium, color = Color(0xFF24324A))
-        }
-    }
-}
-
-@Composable
-private fun DetailSection(label: String, value: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
-        Text(text = value, style = MaterialTheme.typography.bodyLarge, color = Color(0xFF24324A))
-    }
-}
-
-@Composable
-private fun HomeBottomBar(onOpenCamera: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Transparent)
-            .navigationBarsPadding()
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                NavItem(icon = { Icon(Icons.Outlined.Home, null) }, label = "Home", selected = true)
-                NavItem(icon = { Icon(Icons.Outlined.AutoStories, null) }, label = "Descobertos")
-                Spacer(modifier = Modifier.width(72.dp))
-                NavItem(icon = { Icon(Icons.Outlined.Search, null) }, label = "Enciclopedia")
-                NavItem(icon = { Icon(Icons.Outlined.Settings, null) }, label = "Config.")
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = (-26).dp)
-                .size(74.dp)
-                .clip(CircleShape)
-                .background(AppSecondary)
-                .clickable(onClick = onOpenCamera),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.CenterFocusStrong,
-                contentDescription = "Abrir camera",
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun NavItem(
-    icon: @Composable () -> Unit,
-    label: String,
-    selected: Boolean = false,
-) {
-    val tint = if (selected) AppSecondary else AppTextMuted
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.clickable(onClick = {})
-    ) {
-        Box {
-            androidx.compose.runtime.CompositionLocalProvider(
-                androidx.compose.material3.LocalContentColor provides tint,
-                content = icon
-            )
-        }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = tint
-        )
     }
 }
