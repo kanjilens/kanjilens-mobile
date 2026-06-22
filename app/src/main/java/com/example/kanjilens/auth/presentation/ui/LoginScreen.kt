@@ -39,16 +39,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kanjilens.R
 import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
-import com.example.kanjilens.ui.theme.AppBackground
 import com.example.kanjilens.ui.theme.AppPrimary
 import com.example.kanjilens.ui.theme.AppSecondary
-import com.example.kanjilens.ui.theme.AppSurface
 import com.example.kanjilens.ui.theme.AppTextMuted
 
 @Composable
@@ -57,13 +57,17 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
 ) {
     var isCreateAccount by remember { mutableStateOf(false) }
-    var name by remember { mutableStateOf("" ) }
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
+
+    val errorFillEmailPassword = stringResource(R.string.fill_email_password)
+    val errorFillName = stringResource(R.string.fill_name)
+    val errorPasswordsMismatch = stringResource(R.string.passwords_do_not_match)
 
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) onLoginSuccess()
@@ -72,7 +76,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -83,7 +87,7 @@ fun LoginScreen(
             BrandHeader()
             Card(
                 shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(containerColor = AppSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
@@ -108,16 +112,12 @@ fun LoginScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = if (isCreateAccount) "Crie sua conta" else "Bem-vindo de volta",
+                            text = if (isCreateAccount) stringResource(R.string.create_account) else stringResource(R.string.welcome_back),
                             style = MaterialTheme.typography.headlineMedium,
-                            color = Color(0xFF24324A)
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = if (isCreateAccount) {
-                                "Preencha seus dados para iniciar a demo e organizar seus estudos de japones."
-                            } else {
-                                "Use seus dados preenchidos ou digite qualquer credencial valida para acessar o app."
-                            },
+                            text = if (isCreateAccount) stringResource(R.string.create_account_description) else stringResource(R.string.login_description),
                             style = MaterialTheme.typography.bodyLarge,
                             color = AppTextMuted
                         )
@@ -126,7 +126,7 @@ fun LoginScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         if (isCreateAccount) {
                             LabeledField(
-                                label = "Nome",
+                                label = stringResource(R.string.name),
                                 value = name,
                                 onValueChange = { name = it },
                                 leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null, tint = AppSecondary) }
@@ -134,14 +134,14 @@ fun LoginScreen(
                         }
 
                         LabeledField(
-                            label = "E-mail",
+                            label = stringResource(R.string.email),
                             value = email,
                             onValueChange = { email = it },
                             leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null, tint = AppSecondary) }
                         )
 
                         PasswordField(
-                            label = "Senha",
+                            label = stringResource(R.string.password),
                             value = password,
                             onValueChange = { password = it },
                             passwordVisible = passwordVisible,
@@ -150,7 +150,7 @@ fun LoginScreen(
 
                         if (isCreateAccount) {
                             PasswordField(
-                                label = "Confirmar senha",
+                                label = stringResource(R.string.confirm_password),
                                 value = confirmPassword,
                                 onValueChange = { confirmPassword = it },
                                 passwordVisible = confirmPasswordVisible,
@@ -173,9 +173,9 @@ fun LoginScreen(
                             viewModel.clearError()
 
                             when {
-                                email.isBlank() || password.isBlank() -> localError = "Preencha e-mail e senha."
-                                isCreateAccount && name.isBlank() -> localError = "Preencha o nome para criar a conta."
-                                isCreateAccount && confirmPassword != password -> localError = "As senhas nao conferem."
+                                email.isBlank() || password.isBlank() -> localError = errorFillEmailPassword
+                                isCreateAccount && name.isBlank() -> localError = errorFillName
+                                isCreateAccount && confirmPassword != password -> localError = errorPasswordsMismatch
                                 isCreateAccount -> viewModel.createAccount(name, email, password)
                                 else -> viewModel.signIn(email, password)
                             }
@@ -187,9 +187,9 @@ fun LoginScreen(
                     ) {
                         Text(
                             text = if (viewModel.isLoading) {
-                                if (isCreateAccount) "Criando conta..." else "Entrando..."
+                                if (isCreateAccount) stringResource(R.string.creating_account) else stringResource(R.string.logging_in)
                             } else {
-                                if (isCreateAccount) "Criar conta e entrar" else "Entrar no Kanji Lens"
+                                if (isCreateAccount) stringResource(R.string.create_account_and_login) else stringResource(R.string.login_kanji_lens)
                             }
                         )
                     }
@@ -224,7 +224,7 @@ private fun BrandHeader() {
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = "Kanji Lens",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTextMuted
             )
@@ -249,13 +249,13 @@ private fun AuthSegmentedControl(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             AuthSegmentOption(
-                label = "Entrar",
+                label = stringResource(R.string.login),
                 selected = !isCreateAccount,
                 onClick = onSelectLogin,
                 modifier = Modifier.width(optionWidth)
             )
             AuthSegmentOption(
-                label = "Criar conta",
+                label = stringResource(R.string.create_account_button),
                 selected = isCreateAccount,
                 onClick = onSelectCreateAccount,
                 modifier = Modifier.width(optionWidth)
@@ -296,7 +296,7 @@ private fun LabeledField(
     leadingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = label, style = MaterialTheme.typography.titleMedium, color = Color(0xFF24324A))
+        Text(text = label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -317,7 +317,7 @@ private fun PasswordField(
     onToggleVisibility: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = label, style = MaterialTheme.typography.titleMedium, color = Color(0xFF24324A))
+        Text(text = label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -328,7 +328,7 @@ private fun PasswordField(
                 IconButton(onClick = onToggleVisibility) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                        contentDescription = "Mostrar ou esconder senha",
+                        contentDescription = stringResource(R.string.show_hide_password),
                         tint = AppTextMuted
                     )
                 }

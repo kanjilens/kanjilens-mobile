@@ -1,5 +1,6 @@
 package com.example.kanjilens.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -16,6 +17,7 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = AppWhite,
     onBackground = AppTextPrimary,
     onSurface = AppTextPrimary,
+    surfaceVariant = Color(0xFFF4F6F9)
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -28,11 +30,12 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = AppWhite,
     onBackground = AppWhite,
     onSurface = AppWhite,
+    surfaceVariant = Color(0xFF1E3535)
 )
 
 @Composable
 fun KanjiLensTheme(
-    darkTheme: Boolean = false,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
