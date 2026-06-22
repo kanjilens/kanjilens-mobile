@@ -12,7 +12,7 @@ private val Context.settingsDataStore by preferencesDataStore(name = "kanjilens_
 
 data class AppSettings(
     val darkMode: Boolean = false,
-    val language: String = "Portugues"
+    val language: String = "pt"
 )
 
 object AppSettingsStore {
@@ -24,7 +24,7 @@ object AppSettingsStore {
         return appContext.settingsDataStore.data.map { preferences ->
             AppSettings(
                 darkMode = preferences[darkModeKey] ?: false,
-                language = preferences[languageKey] ?: "Portugues"
+                language = preferences[languageKey] ?: "pt"
             )
         }
     }
