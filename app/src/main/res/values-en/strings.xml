@@ -1,0 +1,141 @@
+<resources>
+
+    <string name="settings">Settings</string>
+    <string name="settings_description">Customize your learning experience</string>
+
+    <string name="appearance">Appearance</string>
+    <string name="appearance_description">Customize the application\'s appearance</string>
+
+    <string name="dark_theme">Dark Theme</string>
+    <string name="dark_theme_description">Enable dark mode</string>
+
+    <string name="language">Language</string>
+    <string name="select_language">Select language</string>
+
+    <string name="portuguese">Português</string>
+    <string name="english">English</string>
+    <string name="japanese">日本語</string>
+
+    <string name="home">Home</string>
+    <string name="discovered">Discovered</string>
+    <string name="encyclopedia">Encyclopedia</string>
+    <string name="settings_short">Settings</string>
+
+    <string name="open_camera">Open camera</string>
+
+    <string name="create_account">Create your account</string>
+    <string name="enter_name">Enter your name</string>
+    <string name="enter_email">Enter your email</string>
+    <string name="enter_password">Enter your password</string>
+    <string name="register">Register</string>
+
+    <string name="welcome_back">Welcome back</string>
+    <string name="create_account_description">Fill in your details to start the demo and organize your Japanese studies.</string>
+    <string name="login_description">Use your credentials or enter any valid credentials to access the app.</string>
+
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm password</string>
+
+    <string name="login">Login</string>
+    <string name="create_account_button">Create account</string>
+
+    <string name="fill_email_password">Please enter email and password.</string>
+    <string name="fill_name">Please enter your name.</string>
+    <string name="passwords_do_not_match">Passwords do not match.</string>
+
+    <string name="creating_account">Creating account...</string>
+    <string name="logging_in">Signing in...</string>
+
+    <string name="create_account_and_login">Create account and sign in</string>
+    <string name="login_kanji_lens">Sign in to Kanji Lens</string>
+
+    <string name="show_hide_password">Show or hide password</string>
+    <string name="camera_permission_required">Allow camera access to take a picture of the kanji.</string>
+    <string name="camera_start_error">Could not start the camera.</string>
+    <string name="capture_photo_error">Could not capture the photo.</string>
+    <string name="no_kanji_found">No kanji was identified in the photo.</string>
+    <string name="kanji_lookup_error">Could not retrieve kanji %1$s.</string>
+    <string name="kanji_lookup_failure">Error while retrieving kanji %1$s.</string>
+    <string name="kanji_processing_error">Failed to process the kanji photo.</string>
+    <string name="take_photo_error">Error taking photo.</string>
+    <string name="kanji_added_collection">Kanji added to collection.</string>
+
+    <string name="close_camera">Close camera</string>
+    <string name="processing_kanji_photo">Processing kanji photo...</string>
+    <string name="point_camera_kanji">Point and take a photo of the kanji</string>
+    <string name="capture_kanji">Capture kanji</string>
+
+    <string name="close_modal">Close modal</string>
+
+    <string name="strokes">%1$s strokes</string>
+
+    <string name="on_readings">ON READINGS (音読み)</string>
+    <string name="kun_readings">KUN READINGS (訓読み)</string>
+    <string name="name_readings">NAME READINGS</string>
+
+    <string name="heisig">HEISIG</string>
+
+    <string name="add_to_collection">Add to my collection</string>
+    <string name="scan_another">Scan another</string>
+    <string name="close">Close</string>
+
+    <string name="ocr_identified">Kanji identified using ML Kit OCR</string>
+
+    <string name="no_readings_found">No readings found.</string>
+
+    <string name="comment_added">Comment added</string>
+    <string name="add_comment">Add comment</string>
+
+    <string name="comment_description">Write a note about this kanji - context, difficulty, associations...</string>
+
+    <string name="comment_placeholder">Ex.: I saw this kanji in a manga title...</string>
+
+    <string name="comment_saved">The comment will be saved together with the kanji in your collection.</string>
+
+    <string name="kanji_ocr">Kanji OCR</string>
+    <string name="mlkit_camerax">ML Kit • CameraX</string>
+    <string name="app_name">Kanji Lens</string>
+
+    <string name="stat_total_kanjis">Total Kanjis</string>
+    <string name="stat_total_kanjis_sub">Kanji in your collection</string>
+
+    <string name="stat_viewed_kanjis">Viewed Kanjis</string>
+    <string name="stat_viewed_kanjis_sub">Already reviewed kanji</string>
+
+    <string name="home_dashboard_title">Dashboard</string>
+    <string name="home_dashboard_subtitle">Track your learning progress</string>
+
+    <string name="weekly_title">This Week</string>
+    <string name="weekly_subtitle">Your recent activity</string>
+
+    <string name="discovered_title">Discovered Kanji</string>
+    <string name="discovered_subtitle">Kanji saved in your collection</string>
+
+    <string name="empty_collection_title">No kanji found</string>
+    <string name="empty_collection_subtitle">
+    Start scanning kanji to build your collection.
+</string>
+
+    <string name="badge_viewed">Viewed</string>
+
+    <string name="label_meaning">Meaning</string>
+    <string name="label_reading">Reading</string>
+
+    <string name="dialog_reading">Reading</string>
+    <string name="dialog_heisig">Heisig Keyword</string>
+    <string name="dialog_no_reference">No reference available</string>
+
+    <string name="dialog_comments_title">Comments</string>
+    <string name="dialog_add_comment_title">Add Comment</string>
+
+    <string name="dialog_comment_placeholder">
+    Write a note about this kanji...
+</string>
+
+    <string name="dialog_btn_save">Save</string>
+    <string name="dialog_btn_mark_not_viewed">Mark as not viewed</string>
+    <string name="dialog_btn_mark_viewed">Mark as viewed</string>
+    <string name="dialog_btn_delete">Delete</string>
+ </resources>

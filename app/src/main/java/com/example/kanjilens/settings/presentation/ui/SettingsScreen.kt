@@ -37,18 +37,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
-import com.google.firebase.auth.FirebaseAuth
+import com.example.kanjilens.R
 import com.example.kanjilens.settings.data.local.AppSettingsStore
 import com.example.kanjilens.ui.navigation.AppBottomBar
 import com.example.kanjilens.ui.navigation.AppTab
-import com.example.kanjilens.ui.theme.AppBackground
 import com.example.kanjilens.ui.theme.AppPrimary
 import com.example.kanjilens.ui.theme.AppSecondary
-import com.example.kanjilens.ui.theme.AppSurface
 import com.example.kanjilens.ui.theme.AppTextMuted
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,10 +63,14 @@ fun SettingsScreen(
         initial = com.example.kanjilens.settings.data.local.AppSettings()
     )
     var languageMenuExpanded by remember { mutableStateOf(false) }
-    val languages = listOf("Portugues", "English", "日本語")
+    val languages = listOf(
+        "pt" to stringResource(R.string.portuguese),
+        "en" to stringResource(R.string.english),
+        "ja" to stringResource(R.string.japanese)
+    )
 
     Scaffold(
-        containerColor = AppBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             AppBottomBar(
                 selectedTab = AppTab.SETTINGS,
@@ -79,7 +83,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(AppBackground)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
                 .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
@@ -88,12 +92,12 @@ fun SettingsScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "Configuracoes",
+                    text = stringResource(R.string.settings),
                     style = MaterialTheme.typography.headlineMedium,
-                    color = Color(0xFF24324A)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Personalize sua experiencia de aprendizado",
+                    text = stringResource(R.string.settings_description),
                     style = MaterialTheme.typography.bodyLarge,
                     color = AppTextMuted
                 )
@@ -101,7 +105,7 @@ fun SettingsScreen(
 
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = AppSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(
@@ -112,12 +116,12 @@ fun SettingsScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "Aparencia",
+                            text = stringResource(R.string.appearance),
                             style = MaterialTheme.typography.titleLarge,
-                            color = Color(0xFF24324A)
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Customize a aparencia da aplicacao",
+                            text = stringResource(R.string.appearance_description),
                             style = MaterialTheme.typography.bodyLarge,
                             color = AppTextMuted
                         )
@@ -130,12 +134,12 @@ fun SettingsScreen(
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = "Tema Escuro",
+                                text = stringResource(R.string.dark_theme),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = Color(0xFF24324A)
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = "Ativar modo escuro",
+                                text = stringResource(R.string.dark_theme_description),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = AppTextMuted
                             )
@@ -152,16 +156,16 @@ fun SettingsScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Idioma",
+                            text = stringResource(R.string.language),
                             style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFF24324A)
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Box {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFF4F6F9))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable { languageMenuExpanded = true }
                                     .padding(horizontal = 16.dp, vertical = 14.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -170,11 +174,11 @@ fun SettingsScreen(
                                 Text(
                                     text = settings.language,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = Color(0xFF24324A)
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Icon(
                                     imageVector = Icons.Outlined.KeyboardArrowDown,
-                                    contentDescription = "Selecionar idioma",
+                                    contentDescription = stringResource(R.string.select_language),
                                     tint = AppTextMuted
                                 )
                             }
@@ -183,13 +187,17 @@ fun SettingsScreen(
                                 expanded = languageMenuExpanded,
                                 onDismissRequest = { languageMenuExpanded = false }
                             ) {
-                                languages.forEach { language ->
+                                languages.forEach { (code, label) ->
                                     DropdownMenuItem(
-                                        text = { Text(language) },
+                                        text = { Text(label) },
                                         onClick = {
                                             languageMenuExpanded = false
+
                                             scope.launch {
-                                                AppSettingsStore.updateLanguage(context, language)
+                                                AppSettingsStore.updateLanguage(
+                                                    context,
+                                                    code
+                                                )
                                             }
                                         }
                                     )
@@ -207,7 +215,7 @@ fun SettingsScreen(
 private fun SettingsHeaderCard(onLogout: () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = AppSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -248,7 +256,7 @@ private fun SettingsHeaderCard(onLogout: () -> Unit) {
                         FirebaseAuth.getInstance().signOut()
                         onLogout()
                     })
-                    .background(Color(0xFFF5FAF9)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Outlined.Logout, contentDescription = null, tint = AppTextMuted)

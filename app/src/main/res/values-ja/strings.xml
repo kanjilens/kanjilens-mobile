@@ -1,0 +1,141 @@
+<resources>
+
+    <string name="settings">設定</string>
+    <string name="settings_description">学習体験をカスタマイズします</string>
+
+    <string name="appearance">外観</string>
+    <string name="appearance_description">アプリの外観をカスタマイズします</string>
+
+    <string name="dark_theme">ダークテーマ</string>
+    <string name="dark_theme_description">ダークモードを有効にする</string>
+
+    <string name="language">言語</string>
+    <string name="select_language">言語を選択</string>
+
+    <string name="portuguese">Português</string>
+    <string name="english">English</string>
+    <string name="japanese">日本語</string>
+
+    <string name="home">ホーム</string>
+    <string name="discovered">発見済み</string>
+    <string name="encyclopedia">百科事典</string>
+    <string name="settings_short">設定</string>
+
+    <string name="open_camera">カメラを開く</string>
+
+    <string name="create_account">アカウント作成</string>
+    <string name="enter_name">名前を入力</string>
+    <string name="enter_email">メールアドレスを入力</string>
+    <string name="enter_password">パスワードを入力</string>
+    <string name="register">登録</string>
+
+    <string name="welcome_back">お帰りなさい</string>
+    <string name="create_account_description">情報を入力して、日本語学習を始めましょう。</string>
+    <string name="login_description">資格情報を入力してアプリにアクセスしてください。</string>
+
+    <string name="name">名前</string>
+    <string name="email">メール</string>
+    <string name="password">パスワード</string>
+    <string name="confirm_password">パスワード確認</string>
+
+    <string name="login">ログイン</string>
+    <string name="create_account_button">アカウント作成</string>
+
+    <string name="fill_email_password">メールアドレスとパスワードを入力してください。</string>
+    <string name="fill_name">名前を入力してください。</string>
+    <string name="passwords_do_not_match">パスワードが一致しません。</string>
+
+    <string name="creating_account">アカウント作成中...</string>
+    <string name="logging_in">ログイン中...</string>
+
+    <string name="create_account_and_login">作成してログイン</string>
+    <string name="login_kanji_lens">Kanji Lens にログイン</string>
+
+    <string name="show_hide_password">パスワードの表示/非表示</string>
+    <string name="camera_permission_required">漢字の写真を撮影するためにカメラの使用を許可してください。</string>
+    <string name="camera_start_error">カメラを起動できませんでした。</string>
+    <string name="capture_photo_error">写真を撮影できませんでした。</string>
+    <string name="no_kanji_found">写真から漢字を認識できませんでした。</string>
+    <string name="kanji_lookup_error">漢字「%1$s」を取得できませんでした。</string>
+    <string name="kanji_lookup_failure">漢字「%1$s」の取得中にエラーが発生しました。</string>
+    <string name="kanji_processing_error">漢字画像の処理に失敗しました。</string>
+    <string name="take_photo_error">写真撮影中にエラーが発生しました。</string>
+    <string name="kanji_added_collection">漢字がコレクションに追加されました。</string>
+
+    <string name="close_camera">カメラを閉じる</string>
+    <string name="processing_kanji_photo">漢字画像を処理中...</string>
+    <string name="point_camera_kanji">漢字にカメラを向けて撮影してください</string>
+    <string name="capture_kanji">漢字を撮影</string>
+
+    <string name="close_modal">モーダルを閉じる</string>
+
+    <string name="strokes">%1$s画</string>
+
+    <string name="on_readings">音読み</string>
+    <string name="kun_readings">訓読み</string>
+    <string name="name_readings">名乗り読み</string>
+
+    <string name="heisig">HEISIG</string>
+
+    <string name="add_to_collection">コレクションに追加</string>
+    <string name="scan_another">別の漢字をスキャン</string>
+    <string name="close">閉じる</string>
+
+    <string name="ocr_identified">ML Kit OCR により漢字を認識しました</string>
+
+    <string name="no_readings_found">読みが見つかりませんでした。</string>
+
+    <string name="comment_added">コメント追加済み</string>
+    <string name="add_comment">コメントを追加</string>
+
+    <string name="comment_description">この漢字についてメモを書いてください（出現した場面、難易度、連想など）。</string>
+
+    <string name="comment_placeholder">例：この漢字を漫画のタイトルで見かけた...</string>
+
+    <string name="comment_saved">コメントは漢字と一緒にコレクションへ保存されます。</string>
+
+    <string name="kanji_ocr">漢字OCR</string>
+    <string name="mlkit_camerax">ML Kit • CameraX</string>
+    <string name="app_name">Kanji Lens</string>
+
+    <string name="stat_total_kanjis">漢字総数</string>
+    <string name="stat_total_kanjis_sub">コレクション内の漢字</string>
+
+    <string name="stat_viewed_kanjis">閲覧済み漢字</string>
+    <string name="stat_viewed_kanjis_sub">復習済みの漢字</string>
+
+    <string name="home_dashboard_title">ダッシュボード</string>
+    <string name="home_dashboard_subtitle">学習の進捗を確認しましょう</string>
+
+    <string name="weekly_title">今週</string>
+    <string name="weekly_subtitle">最近の学習活動</string>
+
+    <string name="discovered_title">発見した漢字</string>
+    <string name="discovered_subtitle">コレクションに保存された漢字</string>
+
+    <string name="empty_collection_title">漢字が見つかりません</string>
+    <string name="empty_collection_subtitle">
+    漢字をスキャンしてコレクションを作成しましょう。
+</string>
+
+    <string name="badge_viewed">閲覧済み</string>
+
+    <string name="label_meaning">意味</string>
+    <string name="label_reading">読み</string>
+
+    <string name="dialog_reading">読み</string>
+    <string name="dialog_heisig">ハイジグキーワード</string>
+    <string name="dialog_no_reference">参照情報がありません</string>
+
+    <string name="dialog_comments_title">コメント</string>
+    <string name="dialog_add_comment_title">コメントを追加</string>
+
+    <string name="dialog_comment_placeholder">
+    この漢字についてメモを書いてください...
+</string>
+
+    <string name="dialog_btn_save">保存</string>
+    <string name="dialog_btn_mark_not_viewed">未閲覧にする</string>
+    <string name="dialog_btn_mark_viewed">閲覧済みにする</string>
+    <string name="dialog_btn_delete">削除</string>
+</resources>

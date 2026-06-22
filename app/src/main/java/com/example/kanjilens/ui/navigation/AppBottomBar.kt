@@ -34,7 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.kanjilens.R
 import com.example.kanjilens.ui.theme.AppSecondary
 import com.example.kanjilens.ui.theme.AppTextMuted
 
@@ -61,7 +63,7 @@ fun AppBottomBar(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
             Column {
@@ -90,24 +92,24 @@ fun AppBottomBar(
                 ) {
                     NavItem(
                         icon = { Icon(Icons.Outlined.Home, null) },
-                        label = "Home",
+                        label = stringResource(R.string.home),
                         selected = selectedTab == AppTab.HOME,
                         onClick = onHome
                     )
                     NavItem(
                         icon = { Icon(Icons.Outlined.AutoStories, null) },
-                        label = "Descobertos",
+                        label = stringResource(R.string.discovered),
                         onClick = {}
                     )
                     Spacer(modifier = Modifier.width(72.dp))
                     NavItem(
                         icon = { Icon(Icons.Outlined.Search, null) },
-                        label = "Enciclopedia",
+                        label = stringResource(R.string.encyclopedia),
                         onClick = {}
                     )
                     NavItem(
                         icon = { Icon(Icons.Outlined.Settings, null) },
-                        label = "Config.",
+                        label = stringResource(R.string.settings_short),
                         selected = selectedTab == AppTab.SETTINGS,
                         onClick = onSettings
                     )
@@ -127,7 +129,7 @@ fun AppBottomBar(
         ) {
             Icon(
                 imageVector = Icons.Outlined.CenterFocusStrong,
-                contentDescription = "Abrir camera",
+                contentDescription = stringResource(R.string.open_camera),
                 tint = Color.White,
                 modifier = Modifier.size(32.dp)
             )
