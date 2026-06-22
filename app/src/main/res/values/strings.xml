@@ -1,3 +1,145 @@
 <resources>
-    <string name="app_name">KanjiLens</string>
+
+    <!-- Settings -->
+    <string name="settings">Configurações</string>
+    <string name="settings_description">Personalize sua experiência de aprendizado</string>
+
+    <string name="appearance">Aparência</string>
+    <string name="appearance_description">Customize a aparência da aplicação</string>
+
+    <string name="dark_theme">Tema Escuro</string>
+    <string name="dark_theme_description">Ativar modo escuro</string>
+
+    <string name="language">Idioma</string>
+    <string name="select_language">Selecionar idioma</string>
+
+    <string name="portuguese">Português</string>
+    <string name="english">English</string>
+    <string name="japanese">日本語</string>
+
+    <!-- Bottom Bar -->
+    <string name="home">Home</string>
+    <string name="discovered">Descobertos</string>
+    <string name="encyclopedia">Enciclopédia</string>
+    <string name="settings_short">Config.</string>
+
+    <string name="open_camera">Abrir câmera</string>
+
+    <!-- Register -->
+    <string name="create_account">Crie sua conta</string>
+    <string name="enter_name">Digite seu nome</string>
+    <string name="enter_email">Digite seu email</string>
+    <string name="enter_password">Digite sua senha</string>
+    <string name="register">Registrar</string>
+
+    <!-- Login -->
+    <string name="welcome_back">Bem-vindo de volta</string>
+    <string name="create_account_description">Preencha seus dados para iniciar a demo e organizar seus estudos de japonês.</string>
+    <string name="login_description">Use seus dados preenchidos ou digite qualquer credencial válida para acessar o app.</string>
+
+    <string name="name">Nome</string>
+    <string name="email">E-mail</string>
+    <string name="password">Senha</string>
+    <string name="confirm_password">Confirmar senha</string>
+
+    <string name="login">Entrar</string>
+    <string name="create_account_button">Criar conta</string>
+
+    <string name="fill_email_password">Preencha e-mail e senha.</string>
+    <string name="fill_name">Preencha o nome para criar a conta.</string>
+    <string name="passwords_do_not_match">As senhas não conferem.</string>
+
+    <string name="creating_account">Criando conta...</string>
+    <string name="logging_in">Entrando...</string>
+
+    <string name="create_account_and_login">Criar conta e entrar</string>
+    <string name="login_kanji_lens">Entrar no Kanji Lens</string>
+
+    <string name="camera_permission_required">Permita o uso da camera para tirar a foto do kanji.</string>
+    <string name="camera_start_error">Nao foi possivel iniciar a camera.</string>
+    <string name="capture_photo_error">Nao foi possivel capturar a foto.</string>
+    <string name="no_kanji_found">Nenhum kanji foi identificado na foto.</string>
+    <string name="kanji_lookup_error">Nao foi possivel consultar o kanji %1$s.</string>
+    <string name="kanji_lookup_failure">Erro ao consultar o kanji %1$s.</string>
+    <string name="kanji_processing_error">Falha ao processar a foto do kanji.</string>
+    <string name="take_photo_error">Erro ao tirar a foto.</string>
+    <string name="kanji_added_collection">Kanji adicionado a colecao.</string>
+
+    <string name="close_camera">Fechar camera</string>
+    <string name="processing_kanji_photo">Processando foto do kanji...</string>
+    <string name="point_camera_kanji">Aponte e tire a foto do kanji</string>
+    <string name="capture_kanji">Capturar kanji</string>
+
+    <string name="close_modal">Fechar modal</string>
+
+    <string name="strokes">%1$s tracos</string>
+
+    <string name="on_readings">LEITURAS ON (音読み)</string>
+    <string name="kun_readings">LEITURAS KUN (訓読み)</string>
+    <string name="name_readings">LEITURAS DE NOMES</string>
+
+    <string name="heisig">HEISIG</string>
+
+    <string name="add_to_collection">Adicionar a minha colecao</string>
+    <string name="scan_another">Escanear outro</string>
+    <string name="close">Fechar</string>
+
+    <string name="ocr_identified">Kanji identificado com ML Kit OCR</string>
+
+    <string name="no_readings_found">Nenhuma leitura encontrada.</string>
+
+    <string name="comment_added">Comentario adicionado</string>
+    <string name="add_comment">Adicionar comentario</string>
+
+    <string name="comment_description">Escreva uma nota sobre este kanji - contexto em que apareceu, dificuldade, associacoes...</string>
+
+    <string name="comment_placeholder">Ex.: Vi esse kanji no titulo do manga...</string>
+
+    <string name="comment_saved">O comentario sera salvo junto com o kanji na colecao.</string>
+
+    <string name="kanji_ocr">Kanji OCR</string>
+    <string name="mlkit_camerax">ML Kit • CameraX</string>
+    <string name="show_hide_password">Mostrar ou esconder senha</string>
+    <string name="app_name">Kanji Lens</string>
+
+    <string name="stat_total_kanjis">Total de Kanjis</string>
+    <string name="stat_total_kanjis_sub">Kanjis na sua coleção</string>
+
+    <string name="stat_viewed_kanjis">Kanjis Visualizados</string>
+    <string name="stat_viewed_kanjis_sub">Kanjis já revisados</string>
+
+    <string name="home_dashboard_title">Painel</string>
+    <string name="home_dashboard_subtitle">Acompanhe seu progresso de aprendizado</string>
+
+    <string name="weekly_title">Esta Semana</string>
+    <string name="weekly_subtitle">Sua atividade recente</string>
+
+    <string name="discovered_title">Kanjis Descobertos</string>
+    <string name="discovered_subtitle">Kanjis salvos na sua coleção</string>
+
+    <string name="empty_collection_title">Nenhum kanji encontrado</string>
+    <string name="empty_collection_subtitle">
+    Comece a escanear kanjis para construir sua coleção.
+</string>
+
+    <string name="badge_viewed">Visualizado</string>
+
+    <string name="label_meaning">Significado</string>
+    <string name="label_reading">Leitura</string>
+
+    <string name="dialog_reading">Leitura</string>
+    <string name="dialog_heisig">Palavra-chave Heisig</string>
+    <string name="dialog_no_reference">Nenhuma referência disponível</string>
+
+    <string name="dialog_comments_title">Comentários</string>
+    <string name="dialog_add_comment_title">Adicionar Comentário</string>
+
+    <string name="dialog_comment_placeholder">
+    Escreva uma anotação sobre este kanji...
+</string>
+
+    <string name="dialog_btn_save">Salvar</string>
+    <string name="dialog_btn_mark_not_viewed">Marcar como não visualizado</string>
+    <string name="dialog_btn_mark_viewed">Marcar como visualizado</string>
+    <string name="dialog_btn_delete">Excluir</string>
 </resources>
