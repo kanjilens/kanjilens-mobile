@@ -21,15 +21,29 @@ import com.example.kanjilens.settings.data.local.AppSettingsStore
 import com.example.kanjilens.settings.presentation.ui.SettingsScreen
 import com.example.kanjilens.ui.theme.KanjiLensTheme
 import com.google.firebase.auth.FirebaseAuth
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.LaunchedEffect
+import androidx.core.os.LocaleListCompat
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setApplicationLocales(
+            LocaleListCompat.forLanguageTags("en")
+        )
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current.applicationContext
             val settings by AppSettingsStore.settingsFlow(context).collectAsState(initial = AppSettings())
 
+            LaunchedEffect(settings.language) {
+                android.util.Log.d("KANJI_LANG", "Aplicando idioma: ${settings.language}")
+
+                AppCompatDelegate.setApplicationLocales(
+                    LocaleListCompat.forLanguageTags(settings.language)
+                )
+            }
             KanjiLensTheme(darkTheme = settings.darkMode) {
                 val navController = rememberNavController()
                 val startDestination = if (FirebaseAuth.getInstance().currentUser != null) "Home" else "Login"
