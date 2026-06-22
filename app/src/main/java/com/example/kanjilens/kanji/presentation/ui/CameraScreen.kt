@@ -85,7 +85,6 @@ import com.example.kanjilens.ui.theme.AppTextMuted
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
-import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -94,6 +93,11 @@ import java.util.concurrent.Executors
 private val OverlayColor = Color(0xC80A1020)
 private val CameraCardColor = Color(0xAA151C2B)
 private val HanRegex = Regex("\\p{IsHan}")
+
+private data class OcrCandidate(
+    val kanji: String,
+    val sourceText: String,
+)
 
 @Composable
 fun CameraScreen(onClose: () -> Unit) {
@@ -106,6 +110,8 @@ fun CameraScreen(onClose: () -> Unit) {
     }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var capturedEntry by remember { mutableStateOf<KanjiEntry?>(null) }
+    var recognizedCandidates by remember { mutableStateOf<List<OcrCandidate>>(emptyList()) }
+    var isSelectingCandidate by remember { mutableStateOf(false) }
     var isProcessing by remember { mutableStateOf(false) }
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -210,57 +216,16 @@ fun CameraScreen(onClose: () -> Unit) {
                             val inputImage = InputImage.fromMediaImage(mediaImage, image.imageInfo.rotationDegrees)
                             recognizer.process(inputImage)
                                 .addOnSuccessListener { result ->
-                                    val kanji = extractFirstKanji(result.text)?.toString()
-                                    if (kanji == null) {
+                                    val candidates = extractKanjiCandidates(result.text)
+                                    if (candidates.isEmpty()) {
                                         isProcessing = false
                                         Toast.makeText(context, "Nenhum kanji foi identificado na foto.", Toast.LENGTH_SHORT).show()
                                         return@addOnSuccessListener
                                     }
 
-                                    repository.fetchCatalogKanjiBySymbol(
-                                        symbol = kanji,
-                                        onSuccess = { firestoreEntry ->
-                                            if (firestoreEntry != null) {
-                                                isProcessing = false
-                                                capturedEntry = firestoreEntry
-                                            } else {
-                                                KanjiApi.service.getKanji(kanji).enqueue(object : Callback<KanjiResponse> {
-                                                    override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
-                                                        isProcessing = false
-                                                        if (!response.isSuccessful || response.body() == null) {
-                                                            Toast.makeText(context, "Nao foi possivel consultar o kanji $kanji.", Toast.LENGTH_SHORT).show()
-                                                            return
-                                                        }
-
-                                                        capturedEntry = response.body()?.toKanjiEntry()
-                                                    }
-
-                                                    override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
-                                                        isProcessing = false
-                                                        Toast.makeText(context, "Erro ao consultar o kanji $kanji.", Toast.LENGTH_SHORT).show()
-                                                    }
-                                                })
-                                            }
-                                        },
-                                        onError = { message ->
-                                            KanjiApi.service.getKanji(kanji).enqueue(object : Callback<KanjiResponse> {
-                                                override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
-                                                    isProcessing = false
-                                                    if (!response.isSuccessful || response.body() == null) {
-                                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                                        return
-                                                    }
-
-                                                    capturedEntry = response.body()?.toKanjiEntry()
-                                                }
-
-                                                override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
-                                                    isProcessing = false
-                                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                                }
-                                            })
-                                        }
-                                    )
+                                    recognizedCandidates = candidates
+                                    isSelectingCandidate = true
+                                    isProcessing = false
                                 }
                                 .addOnFailureListener {
                                     isProcessing = false
@@ -279,6 +244,37 @@ fun CameraScreen(onClose: () -> Unit) {
                 )
             }
         )
+
+        if (isSelectingCandidate) {
+            OcrCandidateSelectionOverlay(
+                candidates = recognizedCandidates,
+                onDismiss = {
+                    isSelectingCandidate = false
+                    recognizedCandidates = emptyList()
+                },
+                onSelect = { selectedKanji ->
+                    isSelectingCandidate = false
+                    recognizedCandidates = emptyList()
+                    isProcessing = true
+                    resolveKanjiEntry(
+                        repository = repository,
+                        kanji = selectedKanji,
+                        onResolved = { entry ->
+                            isProcessing = false
+                            if (entry == null) {
+                                Toast.makeText(context, "Nao foi possivel consultar o kanji $selectedKanji.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                capturedEntry = entry
+                            }
+                        },
+                        onError = { message ->
+                            isProcessing = false
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            )
+        }
 
         capturedEntry?.let { entry ->
             CameraResultOverlay(
@@ -369,6 +365,88 @@ private fun CameraOverlay(
                 style = MaterialTheme.typography.bodyMedium
             )
             CaptureActionButton(enabled = !isProcessing, onClick = onCapture)
+        }
+    }
+}
+
+@Composable
+private fun OcrCandidateSelectionOverlay(
+    candidates: List<OcrCandidate>,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xCC08101F))
+    ) {
+        Card(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(18.dp)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(text = "Qual kanji foi lido?", style = MaterialTheme.typography.titleLarge, color = Color(0xFF24324A))
+                        Text(text = "Escolha o caractere correto antes de salvar.", style = MaterialTheme.typography.bodyMedium, color = AppTextMuted)
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Outlined.Close, contentDescription = null)
+                    }
+                }
+
+                Text(
+                    text = "Candidatos detectados",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AppTextMuted
+                )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    candidates.forEach { candidate ->
+                        CandidateChip(
+                            candidate = candidate,
+                            onClick = { onSelect(candidate.kanji) }
+                        )
+                    }
+                }
+
+                OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text("Ler outra foto")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CandidateChip(
+    candidate: OcrCandidate,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(AppPrimaryLight.copy(alpha = 0.88f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = candidate.kanji, style = MaterialTheme.typography.headlineMedium, color = Color(0xFF24324A))
+            Text(text = candidate.sourceText, style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
         }
     }
 }
@@ -720,8 +798,70 @@ private fun CommentComposer(
     }
 }
 
-private fun extractFirstKanji(text: String): Char? {
-    return text.firstOrNull { HanRegex.matches(it.toString()) }
+private fun extractKanjiCandidates(text: String): List<OcrCandidate> {
+    val seen = linkedSetOf<String>()
+    val candidates = mutableListOf<OcrCandidate>()
+
+    text.lineSequence()
+        .flatMap { line ->
+            line.asSequence()
+                .filter { HanRegex.matches(it.toString()) }
+                .map { it.toString() }
+        }
+        .forEach { kanji ->
+            if (seen.add(kanji)) {
+                candidates += OcrCandidate(kanji = kanji, sourceText = kanji)
+            }
+        }
+
+    return candidates
+}
+
+private fun resolveKanjiEntry(
+    repository: KanjiFirestoreRepository,
+    kanji: String,
+    onResolved: (KanjiEntry?) -> Unit,
+    onError: (String) -> Unit,
+) {
+    repository.fetchCatalogKanjiBySymbol(
+        symbol = kanji,
+        onSuccess = { firestoreEntry ->
+            if (firestoreEntry != null) {
+                onResolved(firestoreEntry)
+            } else {
+                KanjiApi.service.getKanji(kanji).enqueue(object : Callback<KanjiResponse> {
+                    override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
+                        if (!response.isSuccessful || response.body() == null) {
+                            onError("Nao foi possivel consultar o kanji $kanji.")
+                            return
+                        }
+
+                        onResolved(response.body()?.toKanjiEntry())
+                    }
+
+                    override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
+                        onError("Erro ao consultar o kanji $kanji.")
+                    }
+                })
+            }
+        },
+        onError = { message ->
+            KanjiApi.service.getKanji(kanji).enqueue(object : Callback<KanjiResponse> {
+                override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
+                    if (!response.isSuccessful || response.body() == null) {
+                        onError(message)
+                        return
+                    }
+
+                    onResolved(response.body()?.toKanjiEntry())
+                }
+
+                override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
+                    onError(message)
+                }
+            })
+        }
+    )
 }
 
 private fun KanjiResponse.toKanjiEntry(): KanjiEntry {
