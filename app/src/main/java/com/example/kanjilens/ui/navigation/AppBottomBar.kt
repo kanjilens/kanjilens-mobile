@@ -42,6 +42,7 @@ import com.example.kanjilens.ui.theme.AppTextMuted
 
 enum class AppTab {
     HOME,
+    DISCOVERY,
     SETTINGS,
 }
 
@@ -49,6 +50,7 @@ enum class AppTab {
 fun AppBottomBar(
     selectedTab: AppTab,
     onHome: () -> Unit,
+    onDiscovery: () -> Unit,
     onCamera: () -> Unit,
     onSettings: () -> Unit,
 ) {
@@ -73,11 +75,14 @@ fun AppBottomBar(
                         .height(3.dp)
                         .background(Color.Transparent)
                 ) {
-                    val indicatorOffset = if (selectedTab == AppTab.HOME) 34.dp else (-34).dp
+                    val indicatorOffset = when (selectedTab) {
+                        AppTab.HOME -> 34.dp
+                        AppTab.DISCOVERY -> 0.dp   // posição central (ajuste conforme necessário)
+                        AppTab.SETTINGS -> (-34).dp
+                    }
                     Box(
                         modifier = Modifier
-                            .align(if (selectedTab == AppTab.HOME) Alignment.CenterStart else Alignment.CenterEnd)
-                            .offset(x = indicatorOffset)
+                            .align(Alignment.Center)
                             .width(96.dp)
                             .height(3.dp)
                             .background(AppSecondary)
@@ -99,7 +104,8 @@ fun AppBottomBar(
                     NavItem(
                         icon = { Icon(Icons.Outlined.AutoStories, null) },
                         label = stringResource(R.string.discovered),
-                        onClick = {}
+                        selected = selectedTab == AppTab.DISCOVERY,
+                        onClick = onDiscovery
                     )
                     Spacer(modifier = Modifier.width(72.dp))
                     NavItem(

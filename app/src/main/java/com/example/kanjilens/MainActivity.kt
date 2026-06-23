@@ -33,6 +33,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import com.example.kanjilens.kanji.presentation.ui.DiscoveryScreen
 import java.util.Locale
 
 
@@ -95,6 +96,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenCamera = {
                                     navController.navigate("Camera") { launchSingleTop = true }
                                 },
+                                onOpenDiscovery = {
+                                    navController.navigate("Discovery") { launchSingleTop = true }
+                                },
                                 onOpenSettings = {
                                     navController.navigate("Settings") {
                                         popUpTo("Home") { saveState = true }
@@ -117,6 +121,33 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        composable("Discovery") {
+                            DiscoveryScreen(
+                                onOpenHome = {
+                                    navController.navigate("Home") {
+                                        popUpTo("Home") { inclusive = false }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onOpenSettings = {
+                                    navController.navigate("Settings") {
+                                        popUpTo("Home") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onLogout = {
+                                    navController.navigate("Login") {
+                                        popUpTo("Home") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onOpenCamera = {
+                                    navController.navigate("Camera") { launchSingleTop = true }
+                                }
+                            )
+                        }
                         composable(route = "Settings") {
                             SettingsScreen(
                                 onOpenHome = {
@@ -125,6 +156,9 @@ class MainActivity : ComponentActivity() {
                                         launchSingleTop = true
                                         restoreState = true
                                     }
+                                },
+                                onOpenDiscovery = {
+                                    navController.navigate("Discovery") { launchSingleTop = true }
                                 },
                                 onOpenCamera = {
                                     navController.navigate("Camera") { launchSingleTop = true }

@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onOpenHome: () -> Unit,
     onOpenCamera: () -> Unit,
+    onOpenDiscovery: () -> Unit,
     onLogout: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -75,6 +76,7 @@ fun SettingsScreen(
             AppBottomBar(
                 selectedTab = AppTab.SETTINGS,
                 onHome = onOpenHome,
+                onDiscovery=onOpenDiscovery,
                 onCamera = onOpenCamera,
                 onSettings = {}
             )
