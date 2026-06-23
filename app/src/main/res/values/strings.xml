@@ -142,4 +142,8 @@
     <string name="dialog_btn_mark_not_viewed">Marcar como não visualizado</string>
     <string name="dialog_btn_mark_viewed">Marcar como visualizado</string>
     <string name="dialog_btn_delete">Excluir</string>
+    <string name="ocr_which_kanji">Qual kanji foi lido?</string>
+    <string name="ocr_choose_correct">Escolha o caractere correto antes de salvar.</string>
+    <string name="ocr_detected_candidates">Candidatos detectados</string>
+    <string name="ocr_read_another_photo">Ler outra foto</string>
 </resources>

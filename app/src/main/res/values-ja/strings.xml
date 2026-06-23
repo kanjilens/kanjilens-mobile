@@ -138,4 +138,8 @@
     <string name="dialog_btn_mark_not_viewed">未閲覧にする</string>
     <string name="dialog_btn_mark_viewed">閲覧済みにする</string>
     <string name="dialog_btn_delete">削除</string>
+    <string name="ocr_which_kanji">どの漢字が読まれましたか？</string>
+    <string name="ocr_choose_correct">保存する前に正しい文字を選んでください。</string>
+    <string name="ocr_detected_candidates">検出された候補</string>
+    <string name="ocr_read_another_photo">別の写真を読む</string>
 </resources>
