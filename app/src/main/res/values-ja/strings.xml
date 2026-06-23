@@ -142,4 +142,12 @@
     <string name="ocr_choose_correct">保存する前に正しい文字を選んでください。</string>
     <string name="ocr_detected_candidates">検出された候補</string>
     <string name="ocr_read_another_photo">別の写真を読む</string>
+    <!-- Discovery Screen -->
+    <string name="discovery_title">発見した漢字</string>
+    <string name="discovery_add">追加</string>
+    <string name="discovery_search_hint">漢字を検索…</string>
+    <string name="discovery_empty">漢字が見つかりませんでした</string>
+    <string name="discovery_meaning_label">意味</string>
+    <string name="discovery_reading_label">読み</string>
+    <string name="discovery_subtitle">登録済みの漢字を管理します</string>
 </resources>

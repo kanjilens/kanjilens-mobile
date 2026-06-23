@@ -146,4 +146,12 @@
     <string name="ocr_choose_correct">Escolha o caractere correto antes de salvar.</string>
     <string name="ocr_detected_candidates">Candidatos detectados</string>
     <string name="ocr_read_another_photo">Ler outra foto</string>
+    <!-- Discovery Screen -->
+    <string name="discovery_title">Kanjis Descobertos</string>
+    <string name="discovery_add">Adicionar</string>
+    <string name="discovery_search_hint">Buscar kanjis…</string>
+    <string name="discovery_empty">Nenhum kanji encontrado</string>
+    <string name="discovery_meaning_label">SIGNIFICADO</string>
+    <string name="discovery_reading_label">LETURA</string>
+    <string name="discovery_subtitle">Gerencie seus kanjis cadastrados</string>
 </resources>
