@@ -23,104 +23,124 @@ import com.example.kanjilens.ui.theme.KanjiLensTheme
 import com.google.firebase.auth.FirebaseAuth
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.LaunchedEffect
+
 import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import android.content.Context
+import android.content.res.Configuration
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setApplicationLocales(
-            LocaleListCompat.forLanguageTags("en")
-        )
+
         enableEdgeToEdge()
+
+
+
         setContent {
-            val context = LocalContext.current.applicationContext
-            val settings by AppSettingsStore.settingsFlow(context).collectAsState(initial = AppSettings())
+
+            val settings by AppSettingsStore.settingsFlow(this)
+                .collectAsState(initial = AppSettings())
 
             LaunchedEffect(settings.language) {
-                android.util.Log.d("KANJI_LANG", "Aplicando idioma: ${settings.language}")
-
-                AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.forLanguageTags(settings.language)
-                )
+                if (settings.language.isNotBlank()) {
+                    AppCompatDelegate.setApplicationLocales(
+                        LocaleListCompat.forLanguageTags(settings.language)
+                    )
+                }
             }
-            KanjiLensTheme(darkTheme = settings.darkMode) {
-                val navController = rememberNavController()
-                val startDestination = if (FirebaseAuth.getInstance().currentUser != null) "Home" else "Login"
-                NavHost(
-                    navController = navController,
-                    startDestination = startDestination,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    composable("Login") {
-                        LoginScreen(
-                            onLoginSuccess = {
-                                navController.navigate("Home") {
-                                    popUpTo("Login") { inclusive = true }
-                                    launchSingleTop = true
+            val context = LocalContext.current
+
+
+                KanjiLensTheme(darkTheme = settings.darkMode) {
+                    val navController = rememberNavController()
+                    val startDestination =
+                        if (FirebaseAuth.getInstance().currentUser != null) "Home" else "Login"
+
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = startDestination,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        composable("Login") {
+                            LoginScreen(
+                                onLoginSuccess = {
+                                    navController.navigate("Home") {
+                                        popUpTo("Login") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
-                            }
-                        )
-                    }
-                    composable("Register") {
-                        RegisterScreen(
-                            onRegisterSuccess = {
-                                navController.navigate("Home") {
-                                    popUpTo("Login") { inclusive = true }
-                                    launchSingleTop = true
+                            )
+                        }
+                        composable("Register") {
+                            RegisterScreen(
+                                onRegisterSuccess = {
+                                    navController.navigate("Home") {
+                                        popUpTo("Login") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
-                            }
-                        )
-                    }
-                    composable(route = "Home") {
-                        HomeScreen(
-                            onOpenCamera = {
-                                navController.navigate("Camera") { launchSingleTop = true }
-                            },
-                            onOpenSettings = {
-                                navController.navigate("Settings") {
-                                    popUpTo("Home") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                            )
+                        }
+                        composable(route = "Home") {
+                            HomeScreen(
+                                onOpenCamera = {
+                                    navController.navigate("Camera") { launchSingleTop = true }
+                                },
+                                onOpenSettings = {
+                                    navController.navigate("Settings") {
+                                        popUpTo("Home") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onLogout = {
+                                    navController.navigate("Login") {
+                                        popUpTo("Home") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
-                            },
-                            onLogout = {
-                                navController.navigate("Login") {
-                                    popUpTo("Home") { inclusive = true }
-                                    launchSingleTop = true
+                            )
+                        }
+                        composable(route = "Camera") {
+                            CameraScreen(
+                                onClose = {
+                                    navController.popBackStack()
                                 }
-                            }
-                        )
-                    }
-                    composable(route = "Camera") {
-                        CameraScreen(
-                            onClose = {
-                                navController.popBackStack()
-                            }
-                        )
-                    }
-                    composable(route = "Settings") {
-                        SettingsScreen(
-                            onOpenHome = {
-                                navController.navigate("Home") {
-                                    popUpTo("Home") { inclusive = false }
-                                    launchSingleTop = true
-                                    restoreState = true
+                            )
+                        }
+                        composable(route = "Settings") {
+                            SettingsScreen(
+                                onOpenHome = {
+                                    navController.navigate("Home") {
+                                        popUpTo("Home") { inclusive = false }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onOpenCamera = {
+                                    navController.navigate("Camera") { launchSingleTop = true }
+                                },
+                                onLogout = {
+                                    navController.navigate("Login") {
+                                        popUpTo("Home") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
-                            },
-                            onOpenCamera = {
-                                navController.navigate("Camera") { launchSingleTop = true }
-                            },
-                            onLogout = {
-                                navController.navigate("Login") {
-                                    popUpTo("Home") { inclusive = true }
-                                    launchSingleTop = true
-                                }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
         }
     }
-}
+
+
