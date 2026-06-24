@@ -138,4 +138,16 @@
     <string name="dialog_btn_mark_not_viewed">Mark as not viewed</string>
     <string name="dialog_btn_mark_viewed">Mark as viewed</string>
     <string name="dialog_btn_delete">Delete</string>
+    <string name="ocr_which_kanji">Which kanji was read?</string>
+    <string name="ocr_choose_correct">Choose the correct character before saving.</string>
+    <string name="ocr_detected_candidates">Detected candidates</string>
+    <string name="ocr_read_another_photo">Scan another photo</string>
+    <!-- Discovery Screen -->
+    <string name="discovery_title">Discovered Kanjis</string>
+    <string name="discovery_add">Add</string>
+    <string name="discovery_search_hint">Search kanjis…</string>
+    <string name="discovery_empty">No kanjis found</string>
+    <string name="discovery_meaning_label">MEANING</string>
+    <string name="discovery_reading_label">READING</string>
+    <string name="discovery_subtitle">Manage your registered kanji</string>
  </resources>

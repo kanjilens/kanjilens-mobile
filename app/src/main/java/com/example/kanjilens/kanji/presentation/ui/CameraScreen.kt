@@ -41,7 +41,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoStories
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -50,7 +49,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -69,11 +67,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.kanjilens.R
 import com.example.kanjilens.kanji.data.remote.KanjiApi
 import com.example.kanjilens.kanji.data.remote.KanjiFirestoreRepository
 import com.example.kanjilens.kanji.data.remote.KanjiResponse
@@ -116,16 +116,24 @@ fun CameraScreen(onClose: () -> Unit) {
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                PackageManager.PERMISSION_GRANTED
+                    PackageManager.PERMISSION_GRANTED
         )
     }
+
+    val msgPermission = stringResource(R.string.camera_permission_required)
+    val msgCameraError = stringResource(R.string.camera_start_error)
+    val msgCaptureError = stringResource(R.string.capture_photo_error)
+    val msgNoKanji = stringResource(R.string.no_kanji_found)
+    val msgProcessingError = stringResource(R.string.kanji_processing_error)
+    val msgPhotoError = stringResource(R.string.take_photo_error)
+    val msgAdded = stringResource(R.string.kanji_added_collection)
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasCameraPermission = granted
         if (!granted) {
-            Toast.makeText(context, "Permita o uso da camera para tirar a foto do kanji.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, msgPermission, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -174,7 +182,7 @@ fun CameraScreen(onClose: () -> Unit) {
                                 captureUseCase
                             )
                         } catch (_: Exception) {
-                            Toast.makeText(context, "Nao foi possivel iniciar a camera.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, msgCameraError, Toast.LENGTH_SHORT).show()
                         }
                     }, ContextCompat.getMainExecutor(androidContext))
                     previewView
@@ -209,7 +217,7 @@ fun CameraScreen(onClose: () -> Unit) {
                             if (mediaImage == null) {
                                 image.close()
                                 isProcessing = false
-                                Toast.makeText(context, "Nao foi possivel capturar a foto.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, msgCaptureError, Toast.LENGTH_SHORT).show()
                                 return
                             }
 
@@ -219,7 +227,7 @@ fun CameraScreen(onClose: () -> Unit) {
                                     val candidates = extractKanjiCandidates(result.text)
                                     if (candidates.isEmpty()) {
                                         isProcessing = false
-                                        Toast.makeText(context, "Nenhum kanji foi identificado na foto.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, msgNoKanji, Toast.LENGTH_SHORT).show()
                                         return@addOnSuccessListener
                                     }
 
@@ -229,7 +237,7 @@ fun CameraScreen(onClose: () -> Unit) {
                                 }
                                 .addOnFailureListener {
                                     isProcessing = false
-                                    Toast.makeText(context, "Falha ao processar a foto do kanji.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, msgProcessingError, Toast.LENGTH_SHORT).show()
                                 }
                                 .addOnCompleteListener {
                                     image.close()
@@ -238,7 +246,7 @@ fun CameraScreen(onClose: () -> Unit) {
 
                         override fun onError(exception: ImageCaptureException) {
                             isProcessing = false
-                            Toast.makeText(context, "Erro ao tirar a foto.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, msgPhotoError, Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
@@ -262,7 +270,7 @@ fun CameraScreen(onClose: () -> Unit) {
                         onResolved = { entry ->
                             isProcessing = false
                             if (entry == null) {
-                                Toast.makeText(context, "Nao foi possivel consultar o kanji $selectedKanji.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.kanji_lookup_error, selectedKanji), Toast.LENGTH_SHORT).show()
                             } else {
                                 capturedEntry = entry
                             }
@@ -286,7 +294,7 @@ fun CameraScreen(onClose: () -> Unit) {
                         entry = entry,
                         comment = comment,
                         onSuccess = {
-                            Toast.makeText(context, "Kanji adicionado a colecao.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, msgAdded, Toast.LENGTH_SHORT).show()
                             onClose()
                         },
                         onError = { message ->
@@ -334,8 +342,8 @@ private fun CameraOverlay(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
-                        Text(text = "Kanji OCR", color = Color.White, style = MaterialTheme.typography.titleMedium)
-                        Text(text = "ML Kit . CameraX", color = AppPrimaryLight, style = MaterialTheme.typography.bodySmall)
+                        Text(text = stringResource(R.string.kanji_ocr), color = Color.White, style = MaterialTheme.typography.titleMedium)
+                        Text(text = stringResource(R.string.mlkit_camerax), color = AppPrimaryLight, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -348,7 +356,7 @@ private fun CameraOverlay(
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Outlined.Close, contentDescription = "Fechar camera", tint = Color.White)
+                Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.close_camera), tint = Color.White)
             }
         }
 
@@ -360,7 +368,7 @@ private fun CameraOverlay(
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Text(
-                text = if (isProcessing) "Processando foto do kanji..." else "Aponte e tire a foto do kanji",
+                text = if (isProcessing) stringResource(R.string.processing_kanji_photo) else stringResource(R.string.point_camera_kanji),
                 color = Color.White.copy(alpha = 0.88f),
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -370,6 +378,7 @@ private fun CameraOverlay(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun OcrCandidateSelectionOverlay(
     candidates: List<OcrCandidate>,
     onDismiss: () -> Unit,
@@ -386,7 +395,8 @@ private fun OcrCandidateSelectionOverlay(
                 .padding(18.dp)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            // ✅ usa surface do tema
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -398,8 +408,17 @@ private fun OcrCandidateSelectionOverlay(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(text = "Qual kanji foi lido?", style = MaterialTheme.typography.titleLarge, color = Color(0xFF24324A))
-                        Text(text = "Escolha o caractere correto antes de salvar.", style = MaterialTheme.typography.bodyMedium, color = AppTextMuted)
+                        Text(
+                            text = stringResource(R.string.ocr_which_kanji),
+                            style = MaterialTheme.typography.titleLarge,
+                            // ✅ usa cor do tema
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = stringResource(R.string.ocr_choose_correct),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppTextMuted
+                        )
                     }
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Outlined.Close, contentDescription = null)
@@ -407,7 +426,7 @@ private fun OcrCandidateSelectionOverlay(
                 }
 
                 Text(
-                    text = "Candidatos detectados",
+                    text = stringResource(R.string.ocr_detected_candidates),
                     style = MaterialTheme.typography.labelMedium,
                     color = AppTextMuted
                 )
@@ -425,7 +444,7 @@ private fun OcrCandidateSelectionOverlay(
                 }
 
                 OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text("Ler outra foto")
+                    Text(stringResource(R.string.ocr_read_another_photo))
                 }
             }
         }
@@ -445,6 +464,7 @@ private fun CandidateChip(
             .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // ✅ cor fixa pois o fundo AppPrimaryLight é sempre claro
             Text(text = candidate.kanji, style = MaterialTheme.typography.headlineMedium, color = Color(0xFF24324A))
             Text(text = candidate.sourceText, style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
         }
@@ -463,7 +483,7 @@ private fun CaptureActionButton(enabled: Boolean, onClick: () -> Unit) {
     ) {
         Icon(
             imageVector = Icons.Outlined.PhotoCamera,
-            contentDescription = "Capturar kanji",
+            contentDescription = stringResource(R.string.capture_kanji),
             tint = AppSecondary,
             modifier = Modifier.size(36.dp)
         )
@@ -546,7 +566,8 @@ private fun CameraResultOverlay(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.78f),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            // ✅ usa surface do tema
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -560,7 +581,7 @@ private fun CameraResultOverlay(
                         onClick = onDismiss,
                         modifier = Modifier.align(Alignment.TopEnd)
                     ) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Fechar modal", tint = Color(0xFF143135))
+                        Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.close_modal), tint = Color(0xFF143135))
                     }
 
                     Row(
@@ -591,7 +612,7 @@ private fun CameraResultOverlay(
                             ) {
                                 PhotoInfoChip(entry.jlpt)
                                 PhotoInfoChip(entry.grade)
-                                PhotoInfoChip("${entry.strokeCount} tracos")
+                                PhotoInfoChip(stringResource(R.string.strokes, entry.strokeCount))
                             }
                             Text(
                                 text = entry.meaning,
@@ -610,18 +631,19 @@ private fun CameraResultOverlay(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     InfoBanner()
-                    ReadingGroup(label = "LEITURAS ON (音読み)", readings = entry.onReadings)
-                    ReadingGroup(label = "LEITURAS KUN (訓読み)", readings = entry.kunReadings)
+                    ReadingGroup(label = stringResource(R.string.on_readings), readings = entry.onReadings)
+                    ReadingGroup(label = stringResource(R.string.kun_readings), readings = entry.kunReadings)
                     if (entry.nameReadings.isNotEmpty()) {
-                        ReadingGroup(label = "LEITURAS DE NOMES", readings = entry.nameReadings)
+                        ReadingGroup(label = stringResource(R.string.name_readings), readings = entry.nameReadings)
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(text = "HEISIG", style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
+                        Text(text = stringResource(R.string.heisig), style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
                         Text(
                             text = entry.heisig.ifBlank { entry.meaning.substringBefore(',') },
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color(0xFF24324A)
+                            // ✅ usa cor do tema
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -647,7 +669,7 @@ private fun CameraResultOverlay(
                     ) {
                         Icon(Icons.Outlined.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Adicionar a minha colecao")
+                        Text(stringResource(R.string.add_to_collection))
                     }
 
                     BoxWithConstraints {
@@ -660,7 +682,7 @@ private fun CameraResultOverlay(
                             ) {
                                 Icon(Icons.Outlined.Refresh, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Escanear outro")
+                                Text(stringResource(R.string.scan_another))
                             }
                             OutlinedButton(
                                 onClick = onClose,
@@ -669,7 +691,7 @@ private fun CameraResultOverlay(
                             ) {
                                 Icon(Icons.Outlined.AutoStories, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Fechar")
+                                Text(stringResource(R.string.close))
                             }
                         }
                     }
@@ -705,7 +727,7 @@ private fun InfoBanner() {
     ) {
         Icon(Icons.Outlined.PhotoCamera, contentDescription = null, tint = AppSecondary, modifier = Modifier.size(18.dp))
         Text(
-            text = "Kanji identificado com ML Kit OCR",
+            text = stringResource(R.string.ocr_identified),
             style = MaterialTheme.typography.bodyMedium,
             color = AppPrimary
         )
@@ -718,7 +740,7 @@ private fun ReadingGroup(label: String, readings: List<String>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = AppTextMuted)
         if (readings.isEmpty()) {
-            Text(text = "Nenhuma leitura encontrada.", style = MaterialTheme.typography.bodyMedium, color = AppTextMuted)
+            Text(text = stringResource(R.string.no_readings_found), style = MaterialTheme.typography.bodyMedium, color = AppTextMuted)
         } else {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -749,7 +771,8 @@ private fun CommentComposer(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        // ✅ usa surface do tema
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, Color(0xFFE0E5EC)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -762,7 +785,7 @@ private fun CommentComposer(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = null, tint = AppSecondary)
                     Text(
-                        text = if (expanded) "Comentario adicionado" else "Adicionar comentario",
+                        text = if (expanded) stringResource(R.string.comment_added) else stringResource(R.string.add_comment),
                         style = MaterialTheme.typography.titleMedium,
                         color = Color(0xFF425063)
                     )
@@ -776,7 +799,7 @@ private fun CommentComposer(
 
             if (expanded) {
                 Text(
-                    text = "Escreva uma nota sobre este kanji - contexto em que apareceu, dificuldade, associacoes...",
+                    text = stringResource(R.string.comment_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTextMuted
                 )
@@ -785,11 +808,11 @@ private fun CommentComposer(
                     onValueChange = onTextChange,
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
-                    placeholder = { Text("Ex.: Vi esse kanji no titulo do manga...") },
+                    placeholder = { Text(stringResource(R.string.comment_placeholder)) },
                     shape = RoundedCornerShape(12.dp)
                 )
                 Text(
-                    text = "O comentario sera salvo junto com o kanji na colecao.",
+                    text = stringResource(R.string.comment_saved),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTextMuted
                 )
@@ -835,7 +858,6 @@ private fun resolveKanjiEntry(
                             onError("Nao foi possivel consultar o kanji $kanji.")
                             return
                         }
-
                         onResolved(response.body()?.toKanjiEntry())
                     }
 
@@ -852,7 +874,6 @@ private fun resolveKanjiEntry(
                         onError(message)
                         return
                     }
-
                     onResolved(response.body()?.toKanjiEntry())
                 }
 

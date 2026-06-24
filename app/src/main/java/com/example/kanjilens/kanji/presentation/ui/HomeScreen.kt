@@ -85,6 +85,7 @@ private data class DashboardStat(
 @Composable
 fun HomeScreen(
     onOpenCamera: () -> Unit,
+    onOpenDiscovery: () -> Unit,
     onOpenSettings: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -130,7 +131,8 @@ fun HomeScreen(
         bottomBar = {
             AppBottomBar(
                 selectedTab = AppTab.HOME,
-                onHome = {},
+                onHome= {},
+                onDiscovery = onOpenDiscovery,
                 onCamera = onOpenCamera,
                 onSettings = onOpenSettings
             )
@@ -494,7 +496,7 @@ private fun DailyKanjiCard(
 }
 
 @Composable
-private fun KanjiDetailsDialog(
+fun KanjiDetailsDialog(
     item: KanjiEntry,
     onDismiss: () -> Unit,
     onToggleViewed: () -> Unit,
