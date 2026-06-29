@@ -3,6 +3,7 @@ package com.example.kanjilens.kanji.presentation.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,6 +69,7 @@ fun DiscoveryScreen(
     onOpenHome: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenEncyclopedia:() -> Unit,
     onLogout: () -> Unit,
     viewModel: DiscoveryViewModel = viewModel()
 ) {
@@ -83,6 +85,7 @@ fun DiscoveryScreen(
                 selectedTab = AppTab.DISCOVERY,
                 onHome = onOpenHome,
                 onDiscovery = { /* já estamos aqui */ },
+                onEncyclopedia = onOpenEncyclopedia,
                 onCamera = onOpenCamera,
                 onSettings = onOpenSettings
             )
@@ -151,6 +154,11 @@ fun DiscoveryScreen(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.discovery_search_hint),
+                            color = if (isSystemInDarkTheme()) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                Color(0xFF6A7282)
+                            }
                         )
                     },
                     leadingIcon = {
@@ -161,13 +169,31 @@ fun DiscoveryScreen(
                         )
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        // Bordas transparentes (sem borda visível)
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        // Fundo adaptável ao tema (claro/escuro)
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        // Cursor
                         cursorColor = MaterialTheme.colorScheme.primary,
+                        // Cores do texto
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        // Ícone de pesquisa
                         focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // Placeholder (texto de exemplo)
+                        focusedPlaceholderColor = if (isSystemInDarkTheme()) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            Color(0xFF6A7282)  // #6A7282
+                        },
+                        unfocusedPlaceholderColor = if (isSystemInDarkTheme()) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            Color(0xFF6A7282)  // #6A7282
+                        }
                     ),
 
                     shape = RoundedCornerShape(12.dp), // Borda bem arredondada
@@ -180,11 +206,7 @@ fun DiscoveryScreen(
                         .height(55.dp)
                         .clickable { /* abrir dropdown */ },
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
+                    color = MaterialTheme.colorScheme.surface
                 ) {
                     Row(
                         modifier = Modifier
@@ -250,10 +272,10 @@ fun DiscoveryScreen(
             onDismiss = { selectedKanjiId = null },
             onToggleViewed = { viewModel.toggleViewed(kanji) },
             onDelete = {
-                viewModel.deleteKanji(kanji.id)
+                viewModel.deleteKanji(kanji.kanji )
                 selectedKanjiId = null
             },
-            onAddComment = { comment -> viewModel.addComment(kanji.id, comment) }
+            onAddComment = { comment -> viewModel.addComment(kanji.kanji , comment) }
         )
     }
 }
