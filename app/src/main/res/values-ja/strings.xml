@@ -150,4 +150,39 @@
     <string name="discovery_meaning_label">意味</string>
     <string name="discovery_reading_label">読み</string>
     <string name="discovery_subtitle">登録済みの漢字を管理します</string>
+    <string name="encyclopedia_title">漢字辞典</string>
+    <string name="encyclopedia_subtitle">JLPTレベル別に漢字を学び、検索できます</string>
+    <string name="encyclopedia_search_hint">漢字、意味、読みで検索...</string>
+    <string name="encyclopedia_empty">漢字が見つかりません</string>
+    <string name="error_email_already_in_use">このメールアドレスはすでに登録されています。</string>
+    <string name="error_weak_password">パスワードがセキュリティ要件を満たしていません。</string>
+    <string name="error_wrong_password">パスワードが正しくありません。</string>
+    <string name="error_user_not_found">このメールアドレスに対応するアカウントが見つかりません。</string>
+    <string name="error_invalid_credentials">メールアドレスまたはパスワードが正しくありません。</string>
+    <string name="error_invalid_email">有効なメールアドレスを入力してください。</string>
+    <string name="error_missing_email">メールアドレスを入力してください。</string>
+    <string name="error_missing_password">パスワードを入力してください。</string>
+    <string name="error_user_disabled">このアカウントは無効になっています。</string>
+    <string name="error_requires_recent_login">続行するには再度ログインしてください。</string>
+    <string name="error_user_token_expired">セッションの有効期限が切れました。再度ログインしてください。</string>
+    <string name="error_invalid_user_token">セッションが無効です。再度ログインしてください。</string>
+    <string name="error_network">インターネット接続がありません。</string>
+    <string name="error_operation_not_allowed">この認証方法は有効になっていません。</string>
+    <string name="error_too_many_requests">試行回数が多すぎます。しばらく待ってからもう一度お試しください。</string>
+    <string name="error_unknown">予期しないエラーが発生しました。もう一度お試しください。</string>
+    <string name="error_password_too_short">パスワードは8文字以上で入力してください。</string>
+    <string name="error_password_missing_uppercase">パスワードには少なくとも1文字の大文字を含めてください。</string>
+    <string name="error_password_missing_number">パスワードには少なくとも1つの数字を含めてください。</string>
+    <string name="error_password_missing_special_character">パスワードには少なくとも1つの特殊文字を含めてください。</string>
+    <string name="send">送信</string>
+    <string name="cancel">キャンセル</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="forgot_password_instruction">
+    パスワード再設定リンクを受け取るために、アカウントに関連付けられたメールアドレスを入力してください。
+</string>
+    <string name="password_reset_success_title">成功</string>
+    <string name="password_reset_success_message">
+    パスワード再設定メールを送信しました。
+</string>
+    <string name="ok">OK</string>
 </resources>
