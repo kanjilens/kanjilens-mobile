@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kanjilens.R
 import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
+import com.example.kanjilens.auth.presentation.mapper.AuthErrorResourceMapper
 
 @Composable
 fun RegisterScreen(
@@ -76,9 +77,9 @@ fun RegisterScreen(
             Text(stringResource(R.string.register))
         }
 
-        viewModel.errorMessage?.let {
+        viewModel.errorMessage?.let { error ->
             Text(
-                text = it,
+                text = stringResource(AuthErrorResourceMapper.map(error)),
                 color = MaterialTheme.colorScheme.error
             )
         }
