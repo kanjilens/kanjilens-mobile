@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.kanjilens.auth.data.repository.AuthRepository
 import com.example.kanjilens.auth.data.repository.UserRepository
+import com.example.kanjilens.auth.domain.AuthError
+import com.example.kanjilens.auth.domain.PasswordValidator
 
 class AuthViewModel : ViewModel() {
 
@@ -15,7 +17,8 @@ class AuthViewModel : ViewModel() {
 
     var isLoggedIn by mutableStateOf(repository.getCurrentUser() != null)
     var isLoading by mutableStateOf(false)
-    var errorMessage by mutableStateOf<String?>(null)
+    var errorMessage by mutableStateOf<AuthError?>(null)
+    var passwordResetSent by mutableStateOf(false)
 
     fun signIn(email: String, password: String) {
         isLoading = true
@@ -44,8 +47,18 @@ class AuthViewModel : ViewModel() {
     }
 
     fun createAccount(name: String, email: String, password: String) {
-        isLoading = true
         errorMessage = null
+
+        val passwordError = PasswordValidator.validate(password)
+
+        if (passwordError != null) {
+            errorMessage = passwordError
+            isLoading = false
+            return
+        }
+
+        isLoading = true
+
         repository.createAccount(
             name = name,
             email = email,
@@ -73,5 +86,31 @@ class AuthViewModel : ViewModel() {
 
     fun clearError() {
         errorMessage = null
+    }
+    fun sendPasswordResetEmail(email: String) {
+        errorMessage = null
+        passwordResetSent = false
+
+        if (email.isBlank()) {
+            errorMessage = AuthError.MissingEmail
+            return
+        }
+
+        isLoading = true
+
+        repository.sendPasswordResetEmail(
+            email = email,
+            onSuccess = {
+                passwordResetSent = true
+                isLoading = false
+            },
+            onError = { error ->
+                errorMessage = error
+                isLoading = false
+            }
+        )
+    }
+    fun clearPasswordResetState() {
+        passwordResetSent = false
     }
 }
