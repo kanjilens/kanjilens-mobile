@@ -2,120 +2,57 @@ package com.example.kanjilens.kanji.presentation.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kanjilens.kanji.data.cache.KanjiDetailCache
+import com.example.kanjilens.kanji.data.local.JlptKanjiList
+import com.example.kanjilens.kanji.data.remote.KanjiApi
+import com.example.kanjilens.kanji.data.remote.KanjiResponse
+import com.example.kanjilens.kanji.model.EncyclopediaKanjiDetail
 import com.example.kanjilens.kanji.model.JLPTLevel
 import com.example.kanjilens.kanji.model.KanjiDetail
-import com.example.kanjilens.kanji.model.Example
+import com.example.kanjilens.kanji.presentation.ui.toKanjiDetail
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import com.example.kanjilens.kanji.data.remote.KanjiResponse
-import com.example.kanjilens.kanji.model.EncyclopediaKanjiDetail
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class EncyclopediaViewModel : ViewModel() {
 
-    // Dados mockados (substituir por repositório real)
-    private val allKanjis = listOf(
-        EncyclopediaKanjiDetail(
-            id = "1",
-            kanji = "日",
-            meaning = "Sol, dia",
-            onReadings = listOf("ニチ", "ジツ"),
-            kunReadings = listOf("ひ", "か"),
-            nameReadings = listOf("あき", "い", "く", "さ", "こ", "う", "す", "たち", "に", "にっ"),
-            strokes = 4,
-            jlptLevel = JLPTLevel.N5,
-            note = "Um dos kanjis mais básicos. Representa o sol e também o Japão.",
-            examples = listOf(
-                Example("日本", "にほん", "Japão"),
-                Example("毎日", "まいにち", "todo dia"),
-                Example("日曜日", "にちようび", "domingo")
-            )
-        ),
-        EncyclopediaKanjiDetail(
-            id = "2",
-            kanji = "月",
-            meaning = "Lua, mês",
-            onReadings = listOf("ゲツ", "ガツ"),
-            kunReadings = listOf("つき"),
-            strokes = 4,
-            jlptLevel = JLPTLevel.N5
-        ),
-        EncyclopediaKanjiDetail(
-            id = "3",
-            kanji = "火",
-            meaning = "Fogo",
-            onReadings = listOf("カ"),
-            kunReadings = listOf("ひ", "-び"),
-            strokes = 4,
-            jlptLevel = JLPTLevel.N5
-        ),
-        EncyclopediaKanjiDetail(
-            id = "4",
-            kanji = "水",
-            meaning = "Água",
-            onReadings = listOf("スイ"),
-            kunReadings = listOf("みず", "みな-"),
-            strokes = 4,
-            jlptLevel = JLPTLevel.N5
-        ),
-        EncyclopediaKanjiDetail(
-            id = "5",
-            kanji = "木",
-            meaning = "Árvore",
-            onReadings = listOf("ボク", "モク"),
-            kunReadings = listOf("き"),
-            strokes = 4,
-            jlptLevel = JLPTLevel.N5
-        ),
-        EncyclopediaKanjiDetail(
-            id = "6",
-            kanji = "金",
-            meaning = "Ouro, dinheiro",
-            onReadings = listOf("キン", "コン"),
-            kunReadings = listOf("かね"),
-            strokes = 8,
-            jlptLevel = JLPTLevel.N5
-        ),
-        EncyclopediaKanjiDetail(
-            id = "7",
-            kanji = "人",
-            meaning = "Pessoa",
-            onReadings = listOf("ジン", "ニン"),
-            kunReadings = listOf("ひと"),
-            strokes = 2,
-            jlptLevel = JLPTLevel.N5
-        ),
-        EncyclopediaKanjiDetail(
-            id = "8",
-            kanji = "本",
-            meaning = "Livro, origem",
-            onReadings = listOf("ホン"),
-            kunReadings = listOf("もと"),
-            strokes = 5,
-            jlptLevel = JLPTLevel.N5
-        )
-    )
+    private val _allKanjis = MutableStateFlow<List<EncyclopediaKanjiDetail>>(emptyList())
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
-    private val _selectedLevel = MutableStateFlow<JLPTLevel?>(null)
+    private val _selectedLevel = MutableStateFlow(JLPTLevel.N5)
     val selectedLevel: StateFlow<JLPTLevel?> = _selectedLevel
 
-    private val _filteredKanjis = MutableStateFlow(allKanjis)
+    private val _isLoading = MutableStateFlow(false)
+
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _filteredKanjis = MutableStateFlow<List<EncyclopediaKanjiDetail>>(emptyList())
     val filteredKanjis: StateFlow<List<EncyclopediaKanjiDetail>> = _filteredKanjis
 
+    private val loadedLevels = mutableSetOf<JLPTLevel>()
+
     init {
+        // Carrega N5 automaticamente ao abrir a tela
+        loadLevel(JLPTLevel.N5)
+
         viewModelScope.launch {
-            combine(_searchQuery, _selectedLevel) { query, level ->
-                allKanjis.filter { kanji ->
-                    val matchesQuery = query.isEmpty() ||
-                            kanji.kanji.contains(query) ||
-                            kanji.meaning.contains(query, ignoreCase = true) ||
-                            kanji.onReadings.any { it.contains(query) } ||
-                            kanji.kunReadings.any { it.contains(query) }
-                    val matchesLevel = level == null || kanji.jlptLevel == level
+            combine(_allKanjis, _searchQuery, _selectedLevel) { list, query, level ->
+                list.filter { kanji ->
+                    val matchesQuery =
+                        query.isEmpty() ||
+                                kanji.kanji.contains(query) ||
+                                kanji.meaning.contains(query, ignoreCase = true) ||
+                                kanji.onReadings.any { it.contains(query) } ||
+                                kanji.kunReadings.any { it.contains(query) }
+
+                    val matchesLevel = kanji.jlptLevel == level
+
                     matchesQuery && matchesLevel
                 }
             }.collect { filtered ->
@@ -128,8 +65,78 @@ class EncyclopediaViewModel : ViewModel() {
         _searchQuery.value = query
     }
 
-    fun setLevel(level: JLPTLevel?) {
+    fun setLevel(level: JLPTLevel) {
         _selectedLevel.value = level
+        loadLevel(level)
     }
 
+    private fun loadLevel(level: JLPTLevel) {
+        if (loadedLevels.contains(level)) return
+        loadedLevels.add(level)
+
+        val symbols = JlptKanjiList.forLevel(level)
+        _isLoading.value = true
+        var pending = symbols.size
+
+        if (pending == 0) {
+            _isLoading.value = false
+            return
+        }
+
+        symbols.forEach { symbol ->
+            val cached = KanjiDetailCache.get(symbol)
+            if (cached != null) {
+                addToAllKanjis(symbol, cached, level)
+                pending--
+                if (pending == 0) _isLoading.value = false
+            } else {
+                KanjiApi.service.getKanji(symbol).enqueue(object : Callback<KanjiResponse> {
+                    override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
+                        response.body()?.toKanjiDetail()?.let { detail ->
+                            KanjiDetailCache.put(symbol, detail)
+                            addToAllKanjis(symbol, detail, level)
+                        }
+                        pending--
+                        if (pending == 0) _isLoading.value = false
+                    }
+
+                    override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
+                        pending--
+                        if (pending == 0) _isLoading.value = false
+                    }
+                })
+            }
+        }
+    }
+
+    private fun addToAllKanjis(symbol: String, detail: KanjiDetail, level: JLPTLevel) {
+        val entry = EncyclopediaKanjiDetail(
+            id = symbol,
+            kanji = symbol,
+            meaning = detail.meaning,
+            onReadings = detail.onReadings,
+            kunReadings = detail.kunReadings,
+            nameReadings = detail.nameReadings,
+            strokes = detail.strokeCount,
+            jlptLevel = level,
+            note = "",
+            examples = emptyList()
+        )
+        val current = _allKanjis.value
+        if (current.none { it.id == entry.id }) {
+            _allKanjis.value = current + entry
+        }
+    }
+
+    private fun KanjiResponse.toKanjiApiDetail(): KanjiDetail = KanjiDetail(
+        meaning = meanings.joinToString(", "),
+        reading = (kun_readings + on_readings).joinToString(", "),
+        strokeCount = stroke_count ?: 0,
+        jlpt = jlpt?.let { "JLPT N$it" } ?: "JLPT -",
+        grade = grade?.let { "Grade $it" } ?: "Grade -",
+        onReadings = on_readings,
+        kunReadings = kun_readings,
+        nameReadings = name_readings,
+        heisig = heisig_en.orEmpty()
+    )
 }
