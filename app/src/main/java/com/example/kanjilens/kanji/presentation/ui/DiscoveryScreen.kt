@@ -30,7 +30,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -77,6 +79,19 @@ fun DiscoveryScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     var selectedKanjiId by remember { mutableStateOf<String?>(null) }
     val selectedKanji = filteredKanjis.firstOrNull { it.id == selectedKanjiId }
+    var expanded by remember { mutableStateOf(false) }
+
+    val selectedLevel by viewModel.selectedJlpt.collectAsState()
+
+    val selectedText = when (selectedLevel) {
+        null -> stringResource(R.string.all)
+        5 -> "N5"
+        4 -> "N4"
+        3 -> "N3"
+        2 -> "N2"
+        1 -> "N1"
+        else -> stringResource(R.string.all)
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -200,23 +215,68 @@ fun DiscoveryScreen(
                     singleLine = true
                 )
 
-                // Chip "Todos" (filtro) - ocupa apenas o espaço necessário
-                Surface(
-                    modifier = Modifier
-                        .height(55.dp)
-                        .clickable { /* abrir dropdown */ },
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = {
+                        expanded = !expanded
+                    }
                 ) {
-                    Row(
+                    Surface(
                         modifier = Modifier
-                            .padding(horizontal = 12.dp)
-                            .fillMaxHeight(),
-                        verticalAlignment = Alignment.CenterVertically
+                            .menuAnchor()
+                            .height(55.dp)
+                            .clickable { expanded = true },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surface
                     ) {
-                        Text("Todos", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.width(4.dp))
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 12.dp)
+                                .fillMaxHeight(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = selectedText,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            Spacer(Modifier.width(4.dp))
+
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = null
+                            )
+                        }
+                    }
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = {
+                            expanded = false
+                        }
+                    ) {
+
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.all)) },
+                            onClick = {
+                                viewModel.setJlptFilter(null)
+                                expanded = false
+                            }
+                        )
+
+                        listOf(5, 4, 3, 2, 1).forEach { level ->
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text("N$level")
+                                },
+                                onClick = {
+                                    viewModel.setJlptFilter(level)
+                                    expanded = false
+                                }
+                            )
+
+                        }
                     }
                 }
             }
