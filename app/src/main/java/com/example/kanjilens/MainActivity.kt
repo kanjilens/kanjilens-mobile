@@ -30,31 +30,62 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import com.example.kanjilens.kanji.presentation.ui.DiscoveryScreen
+import com.example.kanjilens.kanji.presentation.ui.EncyclopediaScreen
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("locale_prefs", Context.MODE_PRIVATE)
+        val language = prefs.getString("applied_language", "pt") ?: "pt"
+
+        val locale = Locale.forLanguageTag(language)
+        Locale.setDefault(locale)
+        val config = Configuration(newBase.resources.configuration)
+        config.setLocale(locale)
+        super.attachBaseContext(newBase.createConfigurationContext(config))
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+        val prefs = getSharedPreferences("locale_prefs", Context.MODE_PRIVATE)
+        val appliedLanguage = prefs.getString("applied_language", "pt") ?: "pt"
+        val savedLanguage = runBlocking {
+            AppSettingsStore.settingsFlow(this@MainActivity).first().language
+        }
+
+        // Se o idioma salvo é diferente do aplicado, aplica e salva
+        if (savedLanguage != appliedLanguage) {
+            prefs.edit().putString("applied_language", savedLanguage).apply()
+            AppCompatDelegate.setApplicationLocales(
+                LocaleListCompat.forLanguageTags(savedLanguage)
+            )
+        }
 
 
 
         setContent {
 
             val settings by AppSettingsStore.settingsFlow(this)
-                .collectAsState(initial = AppSettings())
+                .collectAsState(initial = AppSettings(language = savedLanguage))
+
+            var hasRecreated = false
 
             LaunchedEffect(settings.language) {
-                if (settings.language.isNotBlank()) {
-                    AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(settings.language)
-                    )
+                if (settings.language.isNotBlank() && settings.language != appliedLanguage) {
+                    prefs.edit().putString("applied_language", settings.language).apply()
+                    val intent = packageManager.getLaunchIntentForPackage(packageName)
+                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finish()
                 }
             }
             val context = LocalContext.current
@@ -99,6 +130,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenDiscovery = {
                                     navController.navigate("Discovery") { launchSingleTop = true }
                                 },
+                                onOpenEncyclopedia = {
+                                    navController.navigate("Encyclopedia") { launchSingleTop = true }
+                                },
                                 onOpenSettings = {
                                     navController.navigate("Settings") {
                                         popUpTo("Home") { saveState = true }
@@ -106,6 +140,7 @@ class MainActivity : ComponentActivity() {
                                         restoreState = true
                                     }
                                 },
+
                                 onLogout = {
                                     navController.navigate("Login") {
                                         popUpTo("Home") { inclusive = true }
@@ -137,6 +172,9 @@ class MainActivity : ComponentActivity() {
                                         restoreState = true
                                     }
                                 },
+                                onOpenEncyclopedia = {
+                                    navController.navigate("Encyclopedia") { launchSingleTop = true }
+                                },
                                 onLogout = {
                                     navController.navigate("Login") {
                                         popUpTo("Home") { inclusive = true }
@@ -145,6 +183,36 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenCamera = {
                                     navController.navigate("Camera") { launchSingleTop = true }
+                                }
+                            )
+                        }
+                        composable("Encyclopedia") {
+                            EncyclopediaScreen(
+                                onOpenHome = {
+                                    navController.navigate("Home") {
+                                        popUpTo("Home") { inclusive = false }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onOpenSettings = {
+                                    navController.navigate("Settings") {
+                                        popUpTo("Home") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onLogout = {
+                                    navController.navigate("Login") {
+                                        popUpTo("Home") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onOpenCamera = {
+                                    navController.navigate("Camera") { launchSingleTop = true }
+                                },
+                                onOpenDiscovery = {
+                                    navController.navigate("Discovery"){launchSingleTop= true}
                                 }
                             )
                         }
@@ -162,6 +230,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenCamera = {
                                     navController.navigate("Camera") { launchSingleTop = true }
+                                },
+                                onOpenEncyclopedia = {
+                                    navController.navigate("Encyclopedia") { launchSingleTop = true }
                                 },
                                 onLogout = {
                                     navController.navigate("Login") {

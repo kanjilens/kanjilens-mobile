@@ -56,6 +56,7 @@ fun SettingsScreen(
     onOpenHome: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenDiscovery: () -> Unit,
+    onOpenEncyclopedia:() -> Unit,
     onLogout: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -78,6 +79,7 @@ fun SettingsScreen(
                 onHome = onOpenHome,
                 onDiscovery=onOpenDiscovery,
                 onCamera = onOpenCamera,
+                onEncyclopedia = onOpenEncyclopedia,
                 onSettings = {}
             )
         }
@@ -189,17 +191,14 @@ fun SettingsScreen(
                                 expanded = languageMenuExpanded,
                                 onDismissRequest = { languageMenuExpanded = false }
                             ) {
-                                languages.forEach { (code, label) ->
+                                languages.forEach { (code, label) ->  // ← forEach com desestruturação
                                     DropdownMenuItem(
                                         text = { Text(label) },
                                         onClick = {
                                             languageMenuExpanded = false
-
+                                            android.util.Log.d("LANG_SELECT", "Salvando código: $code")
                                             scope.launch {
-                                                AppSettingsStore.updateLanguage(
-                                                    context,
-                                                    code
-                                                )
+                                                AppSettingsStore.updateLanguage(context, code)
                                             }
                                         }
                                     )

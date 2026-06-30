@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +52,8 @@ import com.example.kanjilens.auth.presentation.viewmodel.AuthViewModel
 import com.example.kanjilens.ui.theme.AppPrimary
 import com.example.kanjilens.ui.theme.AppSecondary
 import com.example.kanjilens.ui.theme.AppTextMuted
+import com.example.kanjilens.auth.domain.AuthError
+import com.example.kanjilens.auth.presentation.mapper.AuthErrorResourceMapper
 
 @Composable
 fun LoginScreen(
@@ -68,6 +72,9 @@ fun LoginScreen(
     val errorFillEmailPassword = stringResource(R.string.fill_email_password)
     val errorFillName = stringResource(R.string.fill_name)
     val errorPasswordsMismatch = stringResource(R.string.passwords_do_not_match)
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
+    var resetEmail by remember { mutableStateOf(email) }
+
 
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) onLoginSuccess()
@@ -139,9 +146,31 @@ fun LoginScreen(
                             onValueChange = { email = it },
                             leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null, tint = AppSecondary) }
                         )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.password),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
 
+                            if (!isCreateAccount) {
+                                Text(
+                                    text = stringResource(R.string.forgot_password),
+                                    color = Color(0xFF0D9488),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.clickable {
+                                        resetEmail = email
+                                        showForgotPasswordDialog = true
+                                    }
+                                )
+                            }
+                        }
                         PasswordField(
-                            label = stringResource(R.string.password),
+                            label = "",
                             value = password,
                             onValueChange = { password = it },
                             passwordVisible = passwordVisible,
@@ -158,10 +187,17 @@ fun LoginScreen(
                             )
                         }
                     }
-
-                    (localError ?: viewModel.errorMessage)?.let { message ->
+                    localError?.let {
                         Text(
-                            text = message,
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    viewModel.errorMessage?.let { error ->
+                        Text(
+                            text = stringResource(AuthErrorResourceMapper.map(error)),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -195,7 +231,41 @@ fun LoginScreen(
                     }
                 }
             }
+            if (showForgotPasswordDialog) {
+                ForgotPasswordDialog(
+                    email = resetEmail,
+                    onEmailChange = { resetEmail = it },
+                    isLoading = viewModel.isLoading,
+                    onDismiss = {
+                        showForgotPasswordDialog = false
+                    },
+                    onSend = {
+                        viewModel.sendPasswordResetEmail(resetEmail)
+                    }
+                )
+            }
+            if (viewModel.passwordResetSent) {
+               AlertDialog(
+                    onDismissRequest = {
+                        viewModel.clearPasswordResetState()
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.clearPasswordResetState()
+                        }) {
+                            Text(stringResource(R.string.ok))
+                        }
+                    },
+                    title = {
+                        Text(stringResource(R.string.password_reset_success_title))
+                    },
+                    text = {
+                        Text(stringResource(R.string.password_reset_success_message))
+                    }
+                )
+            }
         }
+
     }
 }
 
@@ -317,7 +387,13 @@ private fun PasswordField(
     onToggleVisibility: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+        if (label.isNotBlank()) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,

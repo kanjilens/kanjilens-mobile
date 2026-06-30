@@ -6,6 +6,11 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.kanjilens.auth.domain.AuthError
+import com.google.firebase.auth.FirebaseAuthException
+import com.example.kanjilens.auth.data.mapper.FirebaseAuthErrorMapper
+
+
 
 class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
@@ -17,11 +22,17 @@ class AuthRepository {
         email: String,
         password: String,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit,
+        onError: (AuthError) -> Unit,
     ) {
         auth.signInWithEmailAndPassword(email.trim(), password)
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onError(it.message ?: "Erro ao entrar") }
+            .addOnFailureListener { exception ->
+                if (exception is FirebaseAuthException) {
+                    onError(FirebaseAuthErrorMapper.map(exception.errorCode))
+                } else {
+                    onError(AuthError.Unknown)
+                }
+            }
     }
 
     fun createAccount(
@@ -29,12 +40,12 @@ class AuthRepository {
         email: String,
         password: String,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit,
+        onError: (AuthError) -> Unit,
     ) {
         auth.createUserWithEmailAndPassword(email.trim(), password)
             .addOnSuccessListener { result ->
                 val user = result.user ?: run {
-                    onError("Nao foi possivel criar a conta")
+                    onError(AuthError.Unknown)
                     return@addOnSuccessListener
                 }
 
@@ -55,13 +66,16 @@ class AuthRepository {
                                 )
                             )
                             .addOnSuccessListener { onSuccess() }
-                            .addOnFailureListener {
-                                Log.w("AuthRepository", "Falha ao salvar usuario no Firestore: ${it.message}")
-                                onSuccess()
+                            .addOnFailureListener { exception ->
+                                if (exception is FirebaseAuthException) {
+                                    onError(FirebaseAuthErrorMapper.map(exception.errorCode))
+                                } else {
+                                    onError(AuthError.Unknown)
+                                }
                             }
                     }
             }
-            .addOnFailureListener { onError(it.message ?: "Erro ao criar conta") }
+
     }
 
     fun sendVerificationEmail(onDone: () -> Unit) {
@@ -77,5 +91,22 @@ class AuthRepository {
         } catch (e: Exception) {
             Log.e("AuthRepository", "Erro ao deslogar: ${e.message}")
         }
+    }
+    fun sendPasswordResetEmail(
+        email: String,
+        onSuccess: () -> Unit,
+        onError: (AuthError) -> Unit
+    ) {
+        auth.sendPasswordResetEmail(email.trim())
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+                if (exception is FirebaseAuthException) {
+                    onError(FirebaseAuthErrorMapper.map(exception.errorCode))
+                } else {
+                    onError(AuthError.Unknown)
+                }
+            }
     }
 }

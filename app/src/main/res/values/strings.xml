@@ -154,4 +154,39 @@
     <string name="discovery_meaning_label">SIGNIFICADO</string>
     <string name="discovery_reading_label">LETURA</string>
     <string name="discovery_subtitle">Gerencie seus kanjis cadastrados</string>
+    <string name="encyclopedia_title">Enciclopédia de Kanji</string>
+    <string name="encyclopedia_subtitle">Explore e aprenda kanjis por nível JLPT</string>
+    <string name="encyclopedia_search_hint">Buscar por kanji, significado ou leitura...</string>
+    <string name="encyclopedia_empty">Nenhum kanji encontrado</string>
+    <string name="error_email_already_in_use">Este e-mail já está cadastrado.</string>
+    <string name="error_weak_password">A senha não atende aos requisitos de segurança.</string>
+    <string name="error_wrong_password">Senha incorreta.</string>
+    <string name="error_user_not_found">Nenhuma conta foi encontrada com este e-mail.</string>
+    <string name="error_invalid_credentials">E-mail ou senha incorretos.</string>
+    <string name="error_invalid_email">Digite um e-mail válido.</string>
+    <string name="error_missing_email">Informe um e-mail.</string>
+    <string name="error_missing_password">Informe uma senha.</string>
+    <string name="error_user_disabled">Esta conta foi desativada.</string>
+    <string name="error_requires_recent_login">Faça login novamente para continuar.</string>
+    <string name="error_user_token_expired">Sua sessão expirou. Faça login novamente.</string>
+    <string name="error_invalid_user_token">Sua sessão é inválida. Faça login novamente.</string>
+    <string name="error_network">Sem conexão com a internet.</string>
+    <string name="error_operation_not_allowed">Este método de autenticação não está habilitado.</string>
+    <string name="error_too_many_requests">Muitas tentativas. Aguarde alguns minutos e tente novamente.</string>
+    <string name="error_unknown">Ocorreu um erro inesperado. Tente novamente.</string>
+    <string name="error_password_too_short">A senha deve conter pelo menos 8 caracteres.</string>
+    <string name="error_password_missing_uppercase">A senha deve conter pelo menos uma letra maiúscula.</string>
+    <string name="error_password_missing_number">A senha deve conter pelo menos um número.</string>
+    <string name="error_password_missing_special_character">A senha deve conter pelo menos um caractere especial.</string>
+    <string name="send">Enviar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="forgot_password">Esqueci minha senha</string>
+    <string name="forgot_password_instruction">
+    Digite o e-mail associado à sua conta para receber um link de recuperação de senha.
+</string>
+    <string name="password_reset_success_title">Sucesso</string>
+    <string name="password_reset_success_message">
+    Enviamos um e-mail de recuperação.
+</string>
+    <string name="ok">OK</string>
 </resources>

@@ -89,6 +89,9 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.concurrent.Executors
+import com.example.kanjilens.kanji.data.cache.KanjiDetailCache
+import com.example.kanjilens.kanji.model.KanjiDetail
+import com.example.kanjilens.kanji.model.UserKanji
 
 private val OverlayColor = Color(0xC80A1020)
 private val CameraCardColor = Color(0xAA151C2B)
@@ -127,7 +130,7 @@ fun CameraScreen(onClose: () -> Unit) {
     val msgProcessingError = stringResource(R.string.kanji_processing_error)
     val msgPhotoError = stringResource(R.string.take_photo_error)
     val msgAdded = stringResource(R.string.kanji_added_collection)
-
+    val msgLookupError = stringResource(R.string.kanji_lookup_error)
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -269,8 +272,11 @@ fun CameraScreen(onClose: () -> Unit) {
                         kanji = selectedKanji,
                         onResolved = { entry ->
                             isProcessing = false
+
+
+// ✅ usar no callback
                             if (entry == null) {
-                                Toast.makeText(context, context.getString(R.string.kanji_lookup_error, selectedKanji), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "$msgLookupError $selectedKanji", Toast.LENGTH_SHORT).show()
                             } else {
                                 capturedEntry = entry
                             }
@@ -291,7 +297,7 @@ fun CameraScreen(onClose: () -> Unit) {
                 onScanAnother = { capturedEntry = null },
                 onAddToCollection = { comment ->
                     repository.saveScannedKanji(
-                        entry = entry,
+                        kanji = entry.kanji,
                         comment = comment,
                         onSuccess = {
                             Toast.makeText(context, msgAdded, Toast.LENGTH_SHORT).show()
@@ -846,57 +852,26 @@ private fun resolveKanjiEntry(
     onResolved: (KanjiEntry?) -> Unit,
     onError: (String) -> Unit,
 ) {
-    repository.fetchCatalogKanjiBySymbol(
-        symbol = kanji,
-        onSuccess = { firestoreEntry ->
-            if (firestoreEntry != null) {
-                onResolved(firestoreEntry)
-            } else {
-                KanjiApi.service.getKanji(kanji).enqueue(object : Callback<KanjiResponse> {
-                    override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
-                        if (!response.isSuccessful || response.body() == null) {
-                            onError("Nao foi possivel consultar o kanji $kanji.")
-                            return
-                        }
-                        onResolved(response.body()?.toKanjiEntry())
-                    }
-
-                    override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
-                        onError("Erro ao consultar o kanji $kanji.")
-                    }
-                })
-            }
-        },
-        onError = { message ->
-            KanjiApi.service.getKanji(kanji).enqueue(object : Callback<KanjiResponse> {
-                override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
-                    if (!response.isSuccessful || response.body() == null) {
-                        onError(message)
-                        return
-                    }
-                    onResolved(response.body()?.toKanjiEntry())
-                }
-
-                override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
-                    onError(message)
-                }
-            })
+    KanjiApi.service.getKanji(kanji).enqueue(object : Callback<KanjiResponse> {
+        override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
+            val detail = response.body()?.toKanjiDetail() ?: run { onResolved(null); return }
+            KanjiDetailCache.put(kanji, detail)
+            onResolved(KanjiEntry(UserKanji(kanji = kanji), detail))
         }
-    )
+        override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {
+            onError("Erro ao consultar o kanji $kanji.")
+        }
+    })
 }
 
-private fun KanjiResponse.toKanjiEntry(): KanjiEntry {
-    return KanjiEntry(
-        id = kanji,
-        kanji = kanji,
-        meaning = meanings.joinToString(", "),
-        reading = (kun_readings + on_readings).joinToString(", "),
-        strokeCount = stroke_count ?: 0,
-        jlpt = jlpt?.let { "JLPT N$it" } ?: "JLPT -",
-        grade = grade?.let { "Grade $it" } ?: "Grade -",
-        onReadings = on_readings,
-        kunReadings = kun_readings,
-        nameReadings = name_readings,
-        heisig = heisig_en.orEmpty()
-    )
-}
+fun KanjiResponse.toKanjiDetail(): KanjiDetail = KanjiDetail(
+    meaning = meanings.joinToString(", "),
+    reading = (kun_readings + on_readings).joinToString(", "),
+    strokeCount = stroke_count ?: 0,
+    jlpt = jlpt?.let { "JLPT N$it" } ?: "JLPT -",
+    grade = grade?.let { "Grade $it" } ?: "Grade -",
+    onReadings = on_readings,
+    kunReadings = kun_readings,
+    nameReadings = name_readings,
+    heisig = heisig_en.orEmpty()
+)

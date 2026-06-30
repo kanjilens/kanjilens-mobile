@@ -50,6 +50,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +75,18 @@ import com.example.kanjilens.ui.theme.AppPrimary
 import com.example.kanjilens.ui.theme.AppPrimaryLight
 import com.example.kanjilens.ui.theme.AppSecondary
 import com.example.kanjilens.ui.theme.AppTextMuted
+import com.google.firebase.auth.FirebaseAuth
+import com.example.kanjilens.kanji.data.cache.KanjiDetailCache
+import com.example.kanjilens.kanji.model.UserKanji
+import com.example.kanjilens.kanji.data.remote.KanjiApi
+import com.example.kanjilens.kanji.data.remote.KanjiResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import androidx.compose.ui.platform.LocalConfiguration
 
 private data class DashboardStat(
     val title: String,
@@ -87,21 +100,41 @@ fun HomeScreen(
     onOpenCamera: () -> Unit,
     onOpenDiscovery: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenEncyclopedia :() ->Unit,
     onLogout: () -> Unit,
 ) {
+
     val repository = remember { KanjiFirestoreRepository() }
+    var userKanjis by remember { mutableStateOf<List<UserKanji>>(emptyList()) }
     var dailyKanjis by remember { mutableStateOf<List<KanjiEntry>>(emptyList()) }
     var totalCatalogKanjis by remember { mutableStateOf(0) }
     var selectedKanjiId by remember { mutableStateOf<String?>(null) }
     val selectedKanji = dailyKanjis.firstOrNull { it.id == selectedKanjiId }
-
+    LaunchedEffect(userKanjis) {
+        userKanjis.forEach { uk ->
+            if (!KanjiDetailCache.has(uk.kanji)) {
+                KanjiApi.service.getKanji(uk.kanji).enqueue(object : Callback<KanjiResponse> {
+                    override fun onResponse(call: Call<KanjiResponse>, response: Response<KanjiResponse>) {
+                        response.body()?.toKanjiDetail()?.let {
+                            KanjiDetailCache.put(uk.kanji, it)
+                            dailyKanjis = userKanjis.map { u -> KanjiEntry(u, KanjiDetailCache.get(u.kanji)) }
+                        }
+                    }
+                    override fun onFailure(call: Call<KanjiResponse>, t: Throwable) {}
+                })
+            }
+        }
+    }
     DisposableEffect(repository) {
         val catalogListener = repository.observeCatalogCount(
             onUpdate = { totalCatalogKanjis = it },
             onError = {}
         )
         val collectionListener = repository.observeUserCollection(
-            onUpdate = { dailyKanjis = it },
+            onUpdate = { list ->
+                userKanjis = list
+                dailyKanjis = list.map { KanjiEntry(it, KanjiDetailCache.get(it.kanji)) }
+            },
             onError = {}
         )
 
@@ -125,7 +158,16 @@ fun HomeScreen(
             icon = { Icon(Icons.Outlined.RemoveRedEye, contentDescription = null, tint = AppSecondary) }
         )
     )
+    val locale = LocalConfiguration.current.locales[0]
 
+    val weeklyKanjis = dailyKanjis.filter { kanji ->
+        val addedAt = SimpleDateFormat("dd/MM/yyyy", locale)
+            .parse(kanji.addedDate)
+        val sevenDaysAgo = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -7)
+        }.time
+        addedAt != null && addedAt.after(sevenDaysAgo)
+    }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
@@ -134,6 +176,7 @@ fun HomeScreen(
                 onHome= {},
                 onDiscovery = onOpenDiscovery,
                 onCamera = onOpenCamera,
+                onEncyclopedia = onOpenEncyclopedia,
                 onSettings = onOpenSettings
             )
         }
@@ -170,7 +213,7 @@ fun HomeScreen(
                     }
                 }
             }
-            item { WeeklyCard(kanjiCount = dailyKanjis.size) }
+            item { WeeklyCard(kanjiCount = weeklyKanjis.size) }
             item {
                 TodaySection(
                     dailyKanjis = dailyKanjis,
@@ -188,7 +231,7 @@ fun HomeScreen(
                 repository.toggleViewed(item, onSuccess = {}, onError = {})
             },
             onDelete = {
-                repository.deleteKanji(item.id, onSuccess = {}, onError = {})
+                repository.deleteKanji(item.kanji, onSuccess = {}, onError = {})
                 selectedKanjiId = null
             },
             onAddComment = { comment ->
@@ -238,7 +281,10 @@ private fun HeaderCard(onLogout: () -> Unit) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .clickable(onClick = onLogout)
+                    .clickable {
+                        FirebaseAuth.getInstance().signOut()
+                        onLogout()
+                    }
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
@@ -287,7 +333,7 @@ private fun StatCard(stat: DashboardStat, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun WeeklyCard(kanjiCount: Int) {
+private fun WeeklyCard(kanjiCount : Int) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

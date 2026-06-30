@@ -1,21 +1,16 @@
 package com.example.kanjilens.kanji.presentation.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,15 +19,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -55,26 +47,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kanjilens.R
-import com.example.kanjilens.kanji.model.KanjiEntry
-import com.example.kanjilens.kanji.presentation.viewmodel.DiscoveryViewModel
+import com.example.kanjilens.kanji.model.EncyclopediaKanjiDetail
+import com.example.kanjilens.kanji.model.JLPTLevel
+import com.example.kanjilens.kanji.model.KanjiDetail
+import com.example.kanjilens.kanji.presentation.ui.viewmodel.EncyclopediaViewModel
 import com.example.kanjilens.ui.navigation.AppBottomBar
 import com.example.kanjilens.ui.navigation.AppTab
 import com.example.kanjilens.ui.theme.AppPrimary
 import com.example.kanjilens.ui.theme.AppSecondary
 import com.example.kanjilens.ui.theme.AppTextMuted
 import com.google.firebase.auth.FirebaseAuth
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiscoveryScreen(
+fun EncyclopediaScreen(
     onOpenHome: () -> Unit,
+    onOpenDiscovery: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenEncyclopedia:() -> Unit,
     onLogout: () -> Unit,
-    viewModel: DiscoveryViewModel = viewModel()
+    viewModel: EncyclopediaViewModel = viewModel()
 ) {
     val filteredKanjis by viewModel.filteredKanjis.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedLevel by viewModel.selectedLevel.collectAsState()
+
     var selectedKanjiId by remember { mutableStateOf<String?>(null) }
     val selectedKanji = filteredKanjis.firstOrNull { it.id == selectedKanjiId }
 
@@ -82,10 +79,10 @@ fun DiscoveryScreen(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             AppBottomBar(
-                selectedTab = AppTab.DISCOVERY,
+                selectedTab = AppTab.ENCYCLOPEDIA, // ou DISCOVERY, depende do seu enum
                 onHome = onOpenHome,
-                onDiscovery = { /* já estamos aqui */ },
-                onEncyclopedia = onOpenEncyclopedia,
+                onDiscovery = onOpenDiscovery,
+                onEncyclopedia = {},
                 onCamera = onOpenCamera,
                 onSettings = onOpenSettings
             )
@@ -98,47 +95,25 @@ fun DiscoveryScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header (igual ao da Home, mas com botão de adicionar)
-            DiscoveryHeader(onLogout= onLogout)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ){
-                    Text(
-                    text = stringResource(R.string.discovery_title),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                )
-                    Text(
-                        text = stringResource(R.string.discovery_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AppTextMuted,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+            // Header (igual ao da Discovery)
+            EncyclopediaHeader(onLogout = onLogout)
 
-                // Botão +
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onOpenCamera)
-                        .background(AppSecondary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Filled.Add,
-                        contentDescription = stringResource(R.string.discovery_add),
-                        tint = Color.White
-                    )
-                }
+            // Título e subtítulo
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.encyclopedia_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(R.string.encyclopedia_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppTextMuted
+                )
             }
-            // Barra de pesquisa + filtro "Todos" na mesma linha
+            // Barra de pesquisa + seletor de nível "Todos"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -154,11 +129,6 @@ fun DiscoveryScreen(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.discovery_search_hint),
-                            color = if (isSystemInDarkTheme()) {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            } else {
-                                Color(0xFF6A7282)
-                            }
                         )
                     },
                     leadingIcon = {
@@ -184,51 +154,61 @@ fun DiscoveryScreen(
                         focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
                         unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         // Placeholder (texto de exemplo)
-                        focusedPlaceholderColor = if (isSystemInDarkTheme()) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            Color(0xFF6A7282)  // #6A7282
-                        },
-                        unfocusedPlaceholderColor = if (isSystemInDarkTheme()) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            Color(0xFF6A7282)  // #6A7282
-                        }
+                        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
 
                     shape = RoundedCornerShape(12.dp), // Borda bem arredondada
                     singleLine = true
                 )
 
-                // Chip "Todos" (filtro) - ocupa apenas o espaço necessário
-                Surface(
+
+                // Dropdown "Nível: Todos"
+
+
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Texto "Nível:"
+                Text(
+                    text = "Nível:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                // Botão "Todos"
+                val isAllSelected = selectedLevel == null
+                LevelFilterButton(
+                    label = "Todos",
+                    isSelected = isAllSelected,
+                    onClick = { viewModel.setLevel(null) },
                     modifier = Modifier
-                        .height(55.dp)
-                        .clickable { /* abrir dropdown */ },
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    Row(
+                )
+
+                // Botões N5..N1
+                JLPTLevel.values().forEach { level ->
+                    LevelFilterButton(
+                        label = level.label,
+                        isSelected = selectedLevel == level,
+                        onClick = { viewModel.setLevel(level) },
                         modifier = Modifier
-                            .padding(horizontal = 12.dp)
-                            .fillMaxHeight(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Todos", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.width(4.dp))
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                    }
+                    )
                 }
             }
 
-            // Lista ou vazio
+            // Lista de kanjis
             if (filteredKanjis.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.discovery_empty),
+                        text = stringResource(R.string.encyclopedia_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = AppTextMuted
                     )
@@ -238,50 +218,58 @@ fun DiscoveryScreen(
                     contentPadding = PaddingValues(vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Divide a lista em grupos de 2
-                    filteredKanjis.chunked(2).forEach { rowItems ->
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                rowItems.forEach { kanji ->
-                                    // Cada card ocupa metade da largura (com peso)
-                                    DiscoveryKanjiCard(
-                                        kanji = kanji,
-                                        onClick = { selectedKanjiId = kanji.id },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                // Se a linha tiver apenas 1 item, preenche o espaço vazio
-                                if (rowItems.size == 1) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
-                        }
+                    items(filteredKanjis) { kanji ->
+                        EncyclopediaKanjiCard(
+                            kanji = kanji,
+                            onClick = { selectedKanjiId = kanji.id }
+                        )
                     }
                 }
             }
         }
     }
 
-    // Diálogo de detalhes (reutilizado)
+    // Diálogo de detalhes (modal) - estilo da segunda imagem
     selectedKanji?.let { kanji ->
-        KanjiDetailsDialog(
-            item = kanji,
-            onDismiss = { selectedKanjiId = null },
-            onToggleViewed = { viewModel.toggleViewed(kanji) },
-            onDelete = {
-                viewModel.deleteKanji(kanji.kanji )
-                selectedKanjiId = null
-            },
-            onAddComment = { comment -> viewModel.addComment(kanji.kanji , comment) }
+        KanjiDetailDialog(
+            kanji = kanji,
+            onDismiss = { selectedKanjiId = null }
         )
     }
 }
 
+// ---------- Componentes ----------
+
 @Composable
-private fun DiscoveryHeader( onLogout:() -> Unit) {
+private fun LevelFilterButton(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .height(36.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = if (isSelected) AppPrimary else MaterialTheme.colorScheme.surface,
+
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = label,
+                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                fontSize = 14.sp
+            )
+        }
+    }
+}
+@Composable
+private fun EncyclopediaHeader(onLogout: () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -317,10 +305,11 @@ private fun DiscoveryHeader( onLogout:() -> Unit) {
                 )
             }
 
+            // Botão de logout
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable {
                         FirebaseAuth.getInstance().signOut()
                         onLogout()
@@ -330,19 +319,19 @@ private fun DiscoveryHeader( onLogout:() -> Unit) {
             ) {
                 Icon(Icons.Outlined.Logout, contentDescription = null, tint = AppTextMuted)
             }
-
         }
     }
 }
 
 @Composable
-private fun DiscoveryKanjiCard(
-    kanji: KanjiEntry,
+private fun EncyclopediaKanjiCard(
+    kanji: EncyclopediaKanjiDetail,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Card(
         modifier = modifier
+            .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -350,43 +339,77 @@ private fun DiscoveryKanjiCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Kanji grande
             Text(
                 text = kanji.kanji,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.width(80.dp)
             )
-            Text(
-                text = stringResource(R.string.discovery_meaning_label),
-                style = MaterialTheme.typography.labelSmall,
-                color = AppTextMuted
-            )
-            Text(
-                text = kanji.meaning,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = stringResource(R.string.discovery_reading_label),
-                style = MaterialTheme.typography.labelSmall,
-                color = AppTextMuted
-            )
-            Text(
-                text = kanji.reading,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = kanji.addedDate,
-                style = MaterialTheme.typography.bodySmall,
-                color = AppTextMuted
-            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Significado
+                Text(
+                    text = kanji.meaning,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                // Leituras (on/kun)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = kanji.onReadings.joinToString("、"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTextMuted
+                    )
+                    Text(
+                        text = "·",
+                        color = AppTextMuted
+                    )
+                    Text(
+                        text = kanji.kunReadings.joinToString("、"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTextMuted
+                    )
+                }
+
+                // Traços e nível
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "📅 ${kanji.strokes} traços",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTextMuted
+                    )
+                    if (kanji.jlptLevel != null) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = AppSecondary.copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                text = kanji.jlptLevel.label,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = AppPrimary
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

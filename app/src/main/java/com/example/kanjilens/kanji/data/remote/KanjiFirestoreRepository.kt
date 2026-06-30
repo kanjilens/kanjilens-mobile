@@ -1,7 +1,10 @@
 package com.example.kanjilens.kanji.data.remote
 
 import com.example.kanjilens.kanji.model.KanjiComment
+import com.example.kanjilens.kanji.model.KanjiDetail
 import com.example.kanjilens.kanji.model.KanjiEntry
+import com.example.kanjilens.kanji.model.UserKanji
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -12,6 +15,9 @@ import com.google.firebase.firestore.SetOptions
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
+
+import java.util.Calendar
 
 class KanjiFirestoreRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -25,98 +31,53 @@ class KanjiFirestoreRepository(
         onUpdate: (Int) -> Unit,
         onError: (String) -> Unit,
     ): ListenerRegistration {
-        return firestore.collection("kanji")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error.message ?: "Erro ao carregar catalogo de kanjis")
-                    return@addSnapshotListener
-                }
+        val uid = currentUserId() ?: return firestore.collection("users")
+            .addSnapshotListener { _, _ -> onUpdate(0) }
 
+        return firestore.collection("users")
+            .document(uid)
+            .collection("kanjis")
+            .addSnapshotListener { snapshot, error ->
                 onUpdate(snapshot?.size() ?: 0)
             }
     }
 
     fun observeUserCollection(
-        onUpdate: (List<KanjiEntry>) -> Unit,
+        onUpdate: (List<UserKanji>) -> Unit,
         onError: (String) -> Unit,
     ): ListenerRegistration? {
         val uid = currentUserId() ?: return null
 
-        return firestore.collection("usuarios")
+        return firestore.collection("users")
             .document(uid)
-            .collection("colecao")
+            .collection("kanjis")
             .orderBy("addedAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error.message ?: "Erro ao carregar a colecao do usuario")
-                    return@addSnapshotListener
-                }
-
-                val items = snapshot?.documents
-                    ?.mapNotNull { document -> document.toKanjiEntry() }
-                    .orEmpty()
-
+                if (error != null) { onError(error.message ?: "Erro"); return@addSnapshotListener }
+                val items = snapshot?.documents?.mapNotNull { it.toUserKanji() }.orEmpty()
                 onUpdate(items)
             }
     }
 
-    fun fetchCatalogKanjiBySymbol(
-        symbol: String,
-        onSuccess: (KanjiEntry?) -> Unit,
-        onError: (String) -> Unit,
-    ) {
-        firestore.collection("kanji")
-            .whereEqualTo("simbolo", symbol)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                onSuccess(snapshot.documents.firstOrNull()?.toCatalogKanjiEntry())
-            }
-            .addOnFailureListener {
-                onError(it.message ?: "Erro ao consultar o kanji no Firestore")
-            }
-    }
+    fun toggleViewed(item: KanjiEntry, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val uid = currentUserId() ?: run { onError("Usuario nao autenticado"); return }
+        val newStatus = if (item.viewed) "LEARNING" else "SEEN"
 
-    fun toggleViewed(
-        item: KanjiEntry,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit,
-    ) {
-        val uid = currentUserId() ?: run {
-            onError("Usuario nao autenticado")
-            return
-        }
-
-        firestore.collection("usuarios")
-            .document(uid)
-            .collection("colecao")
-            .document(item.id)
-            .update("viewed", !item.viewed)
+        firestore.collection("users").document(uid)
+            .collection("kanjis").document(item.kanji)
+            .update("status", newStatus)
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener {
-                onError(it.message ?: "Erro ao atualizar o estado do kanji")
-            }
+            .addOnFailureListener { onError(it.message ?: "Erro") }
     }
 
-    fun deleteKanji(
-        id: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit,
-    ) {
-        val uid = currentUserId() ?: run {
-            onError("Usuario nao autenticado")
-            return
-        }
+    fun deleteKanji(kanji: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val uid = currentUserId() ?: run { onError("Usuario nao autenticado"); return }
 
-        firestore.collection("usuarios")
-            .document(uid)
-            .collection("colecao")
-            .document(id)
+        firestore.collection("users").document(uid)
+            .collection("kanjis").document(kanji)
             .delete()
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener {
-                onError(it.message ?: "Erro ao excluir o kanji")
-            }
+            .addOnFailureListener { onError(it.message ?: "Erro") }
     }
 
     fun addComment(
@@ -135,16 +96,15 @@ class KanjiFirestoreRepository(
             return
         }
 
-        val commentData = mapOf(
+        val noteData = mapOf(
+            "id" to UUID.randomUUID().toString(),
             "text" to trimmed,
-            "date" to currentDateLabel(),
+            "createdAt" to com.google.firebase.Timestamp.now()
         )
-
-        firestore.collection("usuarios")
-            .document(uid)
-            .collection("colecao")
+        firestore.collection("users").document(uid)
+            .collection("kanjis")
             .document(id)
-            .update("comments", FieldValue.arrayUnion(commentData))
+            .update("notes", FieldValue.arrayUnion(noteData))
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener {
                 onError(it.message ?: "Erro ao adicionar comentario")
@@ -152,113 +112,56 @@ class KanjiFirestoreRepository(
     }
 
     fun saveScannedKanji(
-        entry: KanjiEntry,
+        kanji: String,          // ← muda de KanjiEntry para String
         comment: String,
         onSuccess: () -> Unit,
         onError: (String) -> Unit,
     ) {
-        val uid = currentUserId() ?: run {
-            onError("Usuario nao autenticado")
-            return
-        }
+        val uid = currentUserId() ?: run { onError("Usuario nao autenticado"); return }
 
-        val trimmedComment = comment.trim()
+        val notes = if (comment.isBlank()) emptyList<Map<String, Any>>()
+        else listOf(mapOf(
+            "id" to java.util.UUID.randomUUID().toString(),
+            "text" to comment.trim(),
+            "createdAt" to com.google.firebase.Timestamp.now()
+        ))
+
         val payload = hashMapOf<String, Any>(
-            "id" to entry.id,
-            "kanji" to entry.kanji,
-            "meaning" to entry.meaning,
-            "reading" to entry.reading,
-            "viewed" to entry.viewed,
-            "strokeCount" to entry.strokeCount,
-            "addedDate" to currentDateLabel(),
+            "kanji" to kanji,
             "addedAt" to FieldValue.serverTimestamp(),
-            "jlpt" to entry.jlpt,
-            "grade" to entry.grade,
-            "onReadings" to entry.onReadings,
-            "kunReadings" to entry.kunReadings,
-            "nameReadings" to entry.nameReadings,
-            "heisig" to entry.heisig,
+            "status" to "LEARNING",
+            "category" to "KANJI",
+            "notes" to notes,
         )
 
-        if (trimmedComment.isNotEmpty()) {
-            payload["comments"] = listOf(
-                mapOf(
-                    "text" to trimmedComment,
-                    "date" to currentDateLabel(),
-                )
-            )
-        }
-
-        firestore.collection("usuarios")
+        firestore.collection("users")
             .document(uid)
-            .collection("colecao")
-            .document(entry.id)
+            .collection("kanjis")
+            .document(kanji)           // ← kanji é o ID do documento
             .set(payload, SetOptions.merge())
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener {
-                onError(it.message ?: "Erro ao salvar o kanji na colecao")
-            }
+            .addOnFailureListener { onError(it.message ?: "Erro ao salvar") }
     }
 
-    private fun DocumentSnapshot.toCatalogKanjiEntry(): KanjiEntry? {
-        val symbol = getString("simbolo") ?: getString("kanji") ?: return null
-        val meanings = getStringList("meanings")
-        val onReadings = getStringList("on_readings")
-        val kunReadings = getStringList("kun_readings")
-        val nameReadings = getStringList("name_readings")
 
-        return KanjiEntry(
-            id = id,
-            kanji = symbol,
-            meaning = getString("meaning") ?: meanings.joinToString(", "),
-            reading = (kunReadings + onReadings).filter { it.isNotBlank() }.joinToString(", "),
-            strokeCount = getLong("stroke_count")?.toInt() ?: getLong("strokeCount")?.toInt() ?: 0,
-            jlpt = getLong("jlpt")?.toInt()?.let { "JLPT N$it" } ?: (getString("jlpt") ?: "JLPT -"),
-            grade = getLong("grade")?.toInt()?.let { "Grade $it" } ?: (getString("grade") ?: "Grade -"),
-            onReadings = onReadings,
-            kunReadings = kunReadings,
-            nameReadings = nameReadings,
-            heisig = getString("heisig_en") ?: getString("heisig") ?: "",
-        )
-    }
+   private fun DocumentSnapshot.toUserKanji(): UserKanji? {
+    val kanji = getString("kanji") ?: return null
+    val notes = (get("notes") as? List<*>)?.mapNotNull { raw ->
+        val map = raw as? Map<*, *> ?: return@mapNotNull null
+        val text = map["text"] as? String ?: return@mapNotNull null
+        val date = (map["createdAt"] as? com.google.firebase.Timestamp)
+            ?.toDate()?.formatDateLabel() ?: currentDateLabel()
+        KanjiComment(text = text, date = date)
+    }.orEmpty()
 
-    private fun DocumentSnapshot.toKanjiEntry(): KanjiEntry? {
-        val kanji = getString("kanji") ?: getString("simbolo") ?: return null
-        val meaning = getString("meaning") ?: getStringList("meanings").joinToString(", ")
-        val onReadings = getStringList("onReadings").ifEmpty { getStringList("on_readings") }
-        val kunReadings = getStringList("kunReadings").ifEmpty { getStringList("kun_readings") }
-        val nameReadings = getStringList("nameReadings").ifEmpty { getStringList("name_readings") }
-        val comments = (get("comments") as? List<*>)
-            ?.mapNotNull { raw ->
-                val map = raw as? Map<*, *> ?: return@mapNotNull null
-                val text = map["text"] as? String ?: return@mapNotNull null
-                val date = map["date"] as? String ?: currentDateLabel()
-                KanjiComment(text = text, date = date)
-            }
-            .orEmpty()
-
-        val addedDate = getString("addedDate")
-            ?: getTimestamp("addedAt")?.toDate()?.formatDateLabel()
-            ?: currentDateLabel()
-
-        return KanjiEntry(
-            id = id,
-            kanji = kanji,
-            meaning = meaning,
-            reading = getString("reading")
-                ?: (kunReadings + onReadings).filter { it.isNotBlank() }.joinToString(", "),
-            viewed = getBoolean("viewed") ?: false,
-            strokeCount = getLong("strokeCount")?.toInt() ?: getLong("stroke_count")?.toInt() ?: 0,
-            addedDate = addedDate,
-            jlpt = getString("jlpt") ?: getLong("jlpt")?.toInt()?.let { "JLPT N$it" } ?: "JLPT -",
-            grade = getString("grade") ?: getLong("grade")?.toInt()?.let { "Grade $it" } ?: "Grade -",
-            onReadings = onReadings,
-            kunReadings = kunReadings,
-            nameReadings = nameReadings,
-            comments = comments,
-            heisig = getString("heisig") ?: getString("heisig_en") ?: "",
-        )
-    }
+    return UserKanji(
+        kanji = kanji,
+        addedAt = getTimestamp("addedAt")?.toDate()?.formatDateLabel() ?: currentDateLabel(),
+        status = getString("status") ?: "LEARNING",
+        category = getString("category") ?: "KANJI",
+        notes = notes,
+    )
+}
 
     private fun DocumentSnapshot.getStringList(field: String): List<String> {
         val value = get(field) ?: return emptyList()

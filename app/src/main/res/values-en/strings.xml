@@ -150,4 +150,39 @@
     <string name="discovery_meaning_label">MEANING</string>
     <string name="discovery_reading_label">READING</string>
     <string name="discovery_subtitle">Manage your registered kanji</string>
+    <string name="encyclopedia_title">Kanji Encyclopedia</string>
+    <string name="encyclopedia_subtitle">Explore and learn kanji by JLPT level</string>
+    <string name="encyclopedia_search_hint">Search by kanji, meaning, or reading...</string>
+    <string name="encyclopedia_empty">No kanji found</string>
+    <string name="error_email_already_in_use">This email address is already in use.</string>
+    <string name="error_weak_password">The password does not meet the security requirements.</string>
+    <string name="error_wrong_password">Incorrect password.</string>
+    <string name="error_user_not_found">No account was found with this email address.</string>
+    <string name="error_invalid_credentials">Incorrect email or password.</string>
+    <string name="error_invalid_email">Please enter a valid email address.</string>
+    <string name="error_missing_email">Please enter your email address.</string>
+    <string name="error_missing_password">Please enter your password.</string>
+    <string name="error_user_disabled">This account has been disabled.</string>
+    <string name="error_requires_recent_login">Please sign in again to continue.</string>
+    <string name="error_user_token_expired">Your session has expired. Please sign in again.</string>
+    <string name="error_invalid_user_token">Your session is invalid. Please sign in again.</string>
+    <string name="error_network">No internet connection.</string>
+    <string name="error_operation_not_allowed">This authentication method is not enabled.</string>
+    <string name="error_too_many_requests">Too many attempts. Please wait a few minutes and try again.</string>
+    <string name="error_unknown">An unexpected error occurred. Please try again.</string>
+    <string name="error_password_too_short">The password must be at least 8 characters long.</string>
+    <string name="error_password_missing_uppercase">The password must contain at least one uppercase letter.</string>
+    <string name="error_password_missing_number">The password must contain at least one number.</string>
+    <string name="send">Send</string>
+    <string name="cancel">Cancel</string>
+    <string name="error_password_missing_special_character">The password must contain at least one special character.</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="forgot_password_instruction">
+    Enter the email associated with your account to receive a password reset link.
+</string>
+    <string name="password_reset_success_title">Success</string>
+    <string name="password_reset_success_message">
+    We have sent a password reset email.
+</string>
+    <string name="ok">OK</string>
  </resources>
