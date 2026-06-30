@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -71,7 +72,7 @@ fun EncyclopediaScreen(
     val filteredKanjis by viewModel.filteredKanjis.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedLevel by viewModel.selectedLevel.collectAsState()
-
+    val isLoading by viewModel.isLoading.collectAsState()
     var selectedKanjiId by remember { mutableStateOf<String?>(null) }
     val selectedKanji = filteredKanjis.firstOrNull { it.id == selectedKanjiId }
 
@@ -183,13 +184,6 @@ fun EncyclopediaScreen(
 
                 // Botão "Todos"
                 val isAllSelected = selectedLevel == null
-                LevelFilterButton(
-                    label = "Todos",
-                    isSelected = isAllSelected,
-                    onClick = { viewModel.setLevel(null) },
-                    modifier = Modifier
-                )
-
                 // Botões N5..N1
                 JLPTLevel.values().forEach { level ->
                     LevelFilterButton(
@@ -201,28 +195,40 @@ fun EncyclopediaScreen(
                 }
             }
 
-            // Lista de kanjis
-            if (filteredKanjis.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.encyclopedia_empty),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = AppTextMuted
-                    )
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(filteredKanjis) { kanji ->
-                        EncyclopediaKanjiCard(
-                            kanji = kanji,
-                            onClick = { selectedKanjiId = kanji.id }
+
+                filteredKanjis.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.encyclopedia_empty),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = AppTextMuted
                         )
+                    }
+                }
+
+                else -> {
+                    LazyColumn(
+                        contentPadding = PaddingValues(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(filteredKanjis) { kanji ->
+                            EncyclopediaKanjiCard(
+                                kanji = kanji,
+                                onClick = { selectedKanjiId = kanji.id }
+                            )
+                        }
                     }
                 }
             }

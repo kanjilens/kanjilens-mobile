@@ -28,21 +28,34 @@ class DiscoveryViewModel(
     private val _userKanjis = MutableStateFlow<List<UserKanji>>(emptyList())
     private val _kanjis = MutableStateFlow<List<KanjiEntry>>(emptyList())
     val kanjis: StateFlow<List<KanjiEntry>> = _kanjis.asStateFlow()
+    private val _selectedJlpt = MutableStateFlow<Int?>(null)
+    val selectedJlpt: StateFlow<Int?> = _selectedJlpt.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     val filteredKanjis: StateFlow<List<KanjiEntry>> = combine(
         _kanjis,
-        _searchQuery
-    ) { list, query ->
-        if (query.isBlank()) list
-        else list.filter { entry ->
-            entry.kanji.contains(query, ignoreCase = true) ||
-                    entry.meaning.contains(query, ignoreCase = true) ||
-                    entry.reading.contains(query, ignoreCase = true) ||
-                    entry.heisig.contains(query, ignoreCase = true)
+        _searchQuery,
+        _selectedJlpt
+    ) { list, query, level ->
+
+        list.filter { entry ->
+
+            val matchesSearch =
+                query.isBlank() ||
+                        entry.kanji.contains(query, true) ||
+                        entry.meaning.contains(query, true) ||
+                        entry.reading.contains(query, true) ||
+                        entry.heisig.contains(query, true)
+
+            val matchesLevel =
+                level == null ||
+                        entry.detail?.jlpt == "JLPT N$level"
+
+            matchesSearch && matchesLevel
         }
+
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
@@ -99,6 +112,9 @@ class DiscoveryViewModel(
         viewModelScope.launch {
             repository.addComment(kanjiId, comment, onSuccess, onError)
         }
+    }
+    fun setJlptFilter(level: Int?) {
+        _selectedJlpt.value = level
     }
 
     override fun onCleared() {

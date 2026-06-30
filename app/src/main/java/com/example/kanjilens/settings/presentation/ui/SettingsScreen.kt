@@ -57,6 +57,7 @@ fun SettingsScreen(
     onOpenCamera: () -> Unit,
     onOpenDiscovery: () -> Unit,
     onOpenEncyclopedia:() -> Unit,
+
     onLogout: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -70,6 +71,8 @@ fun SettingsScreen(
         "en" to stringResource(R.string.english),
         "ja" to stringResource(R.string.japanese)
     )
+    val selectedLanguageLabel = languages.firstOrNull { it.first == settings.language }?.second
+        ?: settings.language
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -176,7 +179,7 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = settings.language,
+                                    text = selectedLanguageLabel,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
