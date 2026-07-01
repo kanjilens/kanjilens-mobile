@@ -190,4 +190,8 @@
 </string>
     <string name="ok">OK</string>
     <string name="all">Todos</string>
+    <string name="biometric_opt_in_title">Ativar login por biometria?</string>
+    <string name="biometric_opt_in_message">Na próxima vez, você poderá entrar usando sua digital ou reconhecimento facial, sem digitar a senha.</string>
+    <string name="biometric_opt_in_confirm">Ativar</string>
+    <string name="biometric_opt_in_decline">Agora não</string>
 </resources>

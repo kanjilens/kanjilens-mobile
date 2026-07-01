@@ -186,4 +186,8 @@
 </string>
     <string name="ok">OK</string>
     <string name="all">All</string>
+    <string name="biometric_opt_in_title">Enable biometric login?</string>
+    <string name="biometric_opt_in_message">Next time, you\'ll be able to sign in using your fingerprint or face recognition, without typing your password.</string>
+    <string name="biometric_opt_in_confirm">Enable</string>
+    <string name="biometric_opt_in_decline">Not now</string>
  </resources>
