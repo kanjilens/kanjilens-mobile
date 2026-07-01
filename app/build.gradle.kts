@@ -79,6 +79,11 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.4.2")
     implementation("androidx.camera:camera-view:1.4.2")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.biometric:biometric:1.4.0-alpha06")
+    implementation("androidx.biometric:biometric-compose:1.4.0-alpha06")
+    implementation("androidx.fragment:fragment-ktx:1.8.8")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
