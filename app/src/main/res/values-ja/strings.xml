@@ -186,4 +186,8 @@
 </string>
     <string name="ok">OK</string>
     <string name="all">すべて</string>
+    <string name="biometric_opt_in_title">生体認証ログインを有効にしますか？</string>
+    <string name="biometric_opt_in_message">次回からは、パスワードを入力せずに指紋または顔認証でログインできます。</string>
+    <string name="biometric_opt_in_confirm">有効にする</string>
+    <string name="biometric_opt_in_decline">後で</string>
 </resources>

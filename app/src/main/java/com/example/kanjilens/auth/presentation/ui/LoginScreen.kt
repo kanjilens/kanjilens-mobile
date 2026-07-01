@@ -1,5 +1,8 @@
 package com.example.kanjilens.auth.presentation.ui
 
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +57,14 @@ import com.example.kanjilens.ui.theme.AppSecondary
 import com.example.kanjilens.ui.theme.AppTextMuted
 import com.example.kanjilens.auth.domain.AuthError
 import com.example.kanjilens.auth.presentation.mapper.AuthErrorResourceMapper
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.biometric.AuthenticationResult
+import androidx.biometric.registerForAuthenticationResult
+import androidx.compose.ui.platform.LocalContext
+import com.example.kanjilens.auth.presentation.biometric.BiometricAuthManager
+import androidx.biometric.AuthenticationResultCallback
+import androidx.biometric.BiometricManager
+import androidx.biometric.compose.rememberAuthenticationLauncher
 
 @Composable
 fun LoginScreen(
@@ -69,15 +80,60 @@ fun LoginScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
 
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    val biometricManager = remember { BiometricAuthManager(activity!!) }
+
+    LaunchedEffect(Unit) {
+        Log.d("BiometricDebug", "STRONG = ${BiometricManager.from(context).canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG)}")
+        Log.d("BiometricDebug", "WEAK = ${BiometricManager.from(context).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)}")
+    }
     val errorFillEmailPassword = stringResource(R.string.fill_email_password)
     val errorFillName = stringResource(R.string.fill_name)
     val errorPasswordsMismatch = stringResource(R.string.passwords_do_not_match)
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
     var resetEmail by remember { mutableStateOf(email) }
+    var hasTriedAutoBiometric by remember { mutableStateOf(false) }
+    val biometricOptInTitle = stringResource(R.string.biometric_opt_in_title)
+    val biometricOptInMessage = stringResource(R.string.biometric_opt_in_message)
+    val biometricOptInConfirm = stringResource(R.string.biometric_opt_in_confirm)
+    val biometricOptInDecline = stringResource(R.string.biometric_opt_in_decline)
+    val biometricCallback = remember {
+        object : AuthenticationResultCallback {
+            override fun onAuthResult(result: AuthenticationResult) {
+                when (result) {
+                    is AuthenticationResult.Success -> {
+                        viewModel.signInWithBiometrics()
+                    }
+                    is AuthenticationResult.Error -> {
+                        localError = "Falha na autenticação biométrica: ${result.errString}"
+                    }
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+    val biometricLauncher = rememberAuthenticationLauncher(
+        resultCallback = biometricCallback
+    )
+
 
 
     LaunchedEffect(viewModel.isLoggedIn) {
         if (viewModel.isLoggedIn) onLoginSuccess()
+    }
+    LaunchedEffect(Unit) {
+        if (!hasTriedAutoBiometric && viewModel.canUseBiometricLogin) {
+            hasTriedAutoBiometric = true
+            biometricLauncher.launch(biometricManager.createAuthenticationRequest())
+        }
+    }
+    LaunchedEffect(viewModel.isLoggedIn, viewModel.showBiometricOptIn) {
+        if (viewModel.isLoggedIn && !viewModel.showBiometricOptIn) {
+            onLoginSuccess()
+        }
     }
 
     Box(
@@ -203,6 +259,7 @@ fun LoginScreen(
                         )
                     }
 
+
                     Button(
                         onClick = {
                             localError = null
@@ -242,6 +299,23 @@ fun LoginScreen(
                     onSend = {
                         viewModel.sendPasswordResetEmail(resetEmail)
                     }
+                )
+            }
+            if (viewModel.showBiometricOptIn) {
+                AlertDialog(
+                    onDismissRequest = { viewModel.declineBiometricOptIn() },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.confirmBiometricOptIn() }) {
+                            Text(biometricOptInConfirm)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.declineBiometricOptIn() }) {
+                            Text(biometricOptInDecline)
+                        }
+                    },
+                    title = { Text(biometricOptInTitle) },
+                    text = { Text(biometricOptInMessage) }
                 )
             }
             if (viewModel.passwordResetSent) {
