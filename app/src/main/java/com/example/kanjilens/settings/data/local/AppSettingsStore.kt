@@ -12,19 +12,22 @@ private val Context.settingsDataStore by preferencesDataStore(name = "kanjilens_
 
 data class AppSettings(
     val darkMode: Boolean = false,
-    val language: String = "pt"
+    val language: String = "pt",
+    val biometricEnabled: Boolean = false
 )
 
 object AppSettingsStore {
     private val darkModeKey = booleanPreferencesKey("dark_mode")
     private val languageKey = stringPreferencesKey("language")
+    private val biometricKey = booleanPreferencesKey("biometric_enabled")
 
     fun settingsFlow(context: Context): Flow<AppSettings> {
         val appContext = context.applicationContext
         return appContext.settingsDataStore.data.map { preferences ->
             AppSettings(
                 darkMode = preferences[darkModeKey] ?: false,
-                language = preferences[languageKey] ?: "pt"
+                language = preferences[languageKey] ?: "pt",
+                biometricEnabled = preferences[biometricKey] ?: false
             )
         }
     }
@@ -35,7 +38,13 @@ object AppSettingsStore {
             preferences[darkModeKey] = enabled
         }
     }
+    suspend fun updateBiometric(context: Context, enabled: Boolean) {
+        val appContext = context.applicationContext
 
+        appContext.settingsDataStore.edit { preferences ->
+            preferences[biometricKey] = enabled
+        }
+    }
     suspend fun updateLanguage(context: Context, language: String) {
         val appContext = context.applicationContext
         appContext.settingsDataStore.edit { preferences ->
